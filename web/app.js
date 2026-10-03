@@ -26,12 +26,13 @@ async function loadDataset(){
   if(version!==state.version)return;state.rows=rows;buildFacets();applyFilters();status('');
  }catch(e){if(version===state.version){status(e.message,true);$('result-count').textContent='';}}
 }
-const facetFields=['entity_level','component','contrast','variant','units','cell_type','assay','geometry','kind','rule','scenario','check','parameter_family'];
-function buildFacets(){
- $('facets').replaceChildren();for(const key of facetFields){const values=[...new Set(state.rows.map(r=>r[key]).filter(v=>v!==null&&v!==undefined&&v!==''))].sort();if(values.length<2||values.length>150)continue;
- const mandatory=state.dataset.kind==='effects'&&['entity_level','component','contrast','variant','units'].includes(key);
- let initial=mandatory?(values.includes('primary')?'primary':values.includes('feature')?'feature':values[0]):'';
- const label=el('label',human(key));const select=el('select',undefined,{'aria-label':human(key)});options(select,[...(!mandatory?[['','All']]:[]),...values.map(v=>[String(v),human(v)])],String(initial));state.facets[key]=String(initial);select.dataset.key=key;select.onchange=()=>{state.facets[key]=select.value;state.page=0;applyFilters();};label.append(select);$('facets').append(label);
+const facetFields=['entity_level','variant','component','contrast','units','cell_type','assay','geometry','kind','rule','scenario','check','parameter_family'];
+function buildFacets(preserve=false){
+ const previous=preserve?{...state.facets}:{};state.facets={};
+ $('facets').replaceChildren();for(const key of facetFields){const eligible=state.rows.filter(r=>Object.entries(state.facets).every(([k,v])=>!v||String(r[k])===v));const values=[...new Set(eligible.map(r=>r[key]).filter(v=>v!==null&&v!==undefined&&v!==''))].sort();if(values.length<2||values.length>150)continue;
+ const mandatory=state.dataset.kind==='effects'&&['entity_level','variant','component','contrast','units'].includes(key);
+ let initial=previous[key]&&values.map(String).includes(previous[key])?previous[key]:mandatory?(values.includes('primary')?'primary':values.includes('feature')?'feature':values[0]):'';
+ const label=el('label',human(key));const select=el('select',undefined,{'aria-label':human(key)});options(select,[...(!mandatory?[['','All']]:[]),...values.map(v=>[String(v),human(v)])],String(initial));state.facets[key]=String(initial);select.dataset.key=key;select.onchange=()=>{state.facets[key]=select.value;state.page=0;buildFacets(true);applyFilters();};label.append(select);$('facets').append(label);
  }
  $('include-failed').closest('label').hidden=!state.rows.some(r=>r.numerical_checks_pass!==undefined);
 }
