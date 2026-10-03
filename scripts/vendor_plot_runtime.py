@@ -7,7 +7,7 @@ from urllib.request import urlopen
 
 BASE = 'https://cdn.jsdelivr.net/pyodide/v314.0.7/full/'
 CORE = {
-    'pyodide.js': '3141b814715a72e59b51b1b18b9ceae5bf19f7c852417e431bb0a34feadf825c',
+    'pyodide.mjs': '6f1d60f7bf529beb300f0f47983c921d3982363640ba20af0e38efdddbc66109',
     'pyodide.asm.mjs': 'f7cdc8ece80678ceb712f8e65ebe6d3a83203a180c399865f49612a051693635',
     'pyodide.asm.wasm': 'cc36e3cab04fdfc9a63ff13eb52eae2b911bf46c025cc7b281f394bd3de1d5e6',
     'python_stdlib.zip': 'fa1957e5777068fc4f7437f96d860ae2fbe9c19732ba06c84e004ec16dd7dd7a',
