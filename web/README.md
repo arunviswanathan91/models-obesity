@@ -8,9 +8,9 @@ The figure worker loads pinned Pyodide 314.0.7 and Seaborn 0.13.2. Python initia
 
 ## Lab deployment
 
-The lab site already copies its `public/` directory into its GitHub Pages build. Copy the six runtime files from this directory (index.html, style.css, app.js, config.js, plot-worker.js, plotting.py) into `public/models-obesity/` in the lab website repository. Commit through an account/integration with write access. The existing lab deployment workflow then serves the atlas at `/models-obesity/`. No deployment-workflow edit is needed.
+The lab deployment workflow checks out a pinned commit of this repository and copies `web/` to `docs/models-obesity/` after the lab site build and checks. The atlas is served at `/models-obesity/`. To deploy a new tested website version, update that pinned commit in the lab workflow using an account or integration with write access.
 
-This repository remains the canonical source; repeat the export when the website changes.
+This repository remains the canonical source. The lab workflow uses a reviewed version rather than automatically taking untested changes.
 
 ## Interpretation
 
