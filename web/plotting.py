@@ -134,6 +134,15 @@ def render(request_json):
             fig.axes[0].set_xlabel('Cell type' if df.cell_type.notna().any() else 'Effect component')
             fig.axes[0].set_ylabel('Signature / feature')
             note=f'{len(row_names)} rows ranked by maximum absolute posterior mean. Original study heatmap renderer. Scale: −{vmax:.3g} (blue) to +{vmax:.3g} (magenta), white = 0; units: {units}. Circle: pointwise 95% HDI excludes zero. Empty cells are unavailable.'
+    elif kind == 'purity':
+        if df.compartment.nunique()!=1:
+            raise ValueError('Select one compartment before drawing.')
+        df=df.sort_values('max_cluster_purity')
+        fig,ax=plt.subplots(figsize=(8,max(4,len(df)*.25)))
+        ax.barh(df.CellType,df.max_cluster_purity.astype(float),color=TEAL)
+        ax.set_xlim(0,1);ax.set_xlabel('Fraction assigned to dominant cluster');ax.set_ylabel('Cell type / state')
+        ax.set_title(title,loc='left',fontsize=11);fig.tight_layout()
+        note='Within-type cluster concentration, not tumour purity or deconvolution accuracy. A value of 1 does not rule out two cell types sharing a cluster. The saved purity table does not identify preprocessing mode.'
     elif kind in ('scree','contributions','annotation'):
         fields = ['compartment','analysis_set'] if kind == 'scree' else ['compartment','analysis_set','PC'] if kind == 'contributions' else ['reference','resolution']
         for field in fields:
