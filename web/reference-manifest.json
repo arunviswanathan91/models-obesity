@@ -124,5 +124,65 @@
     "source_file": "annotation_summary_dice_main.csv",
     "sha256": "8363725744a572da002156a2c17f64a518ca5ecec54a1c6603321d3b8411e0d7",
     "rows": 5
+  },
+  {
+    "collection_id": "reference/separation_metrics",
+    "source_file": "immune_coarse/separation_metrics.csv",
+    "sha256": "9f48c58571124fdf52751a8dc29800865b183fa287743d9fcac1992ccf6eeca0"
+  },
+  {
+    "collection_id": "reference/per_celltype_patient_spread",
+    "source_file": "immune_coarse/per_celltype_patient_spread.csv",
+    "sha256": "0c237c1eed785a17cf595cf2c605614fc1304d0f0fa1f98f790fdf45f359d4cb"
+  },
+  {
+    "collection_id": "reference/celltype_purity",
+    "source_file": "immune_coarse/celltype_purity.csv",
+    "sha256": "f9587c6af17ae7ba1518fbd3e7e8c9634c8ee3b59733c9b78bae58f5924098a2"
+  },
+  {
+    "collection_id": "reference/confusion_crosstab",
+    "source_file": "immune_coarse/confusion_crosstab.csv",
+    "sha256": "0fcb55d65265e08f0a396e393d96f217649c39d4fe403a6c9ac256d192ec873a"
+  },
+  {
+    "collection_id": "reference/separation_metrics",
+    "source_file": "nonimmune/separation_metrics.csv",
+    "sha256": "4aae8befb238d78cbafca028380272836c71cc889898478d4170b6c8a6c4c324"
+  },
+  {
+    "collection_id": "reference/per_celltype_patient_spread",
+    "source_file": "nonimmune/per_celltype_patient_spread.csv",
+    "sha256": "01214feb5288f4500bdd421f952e256af50802f86d465e169f60156f25fd28ef"
+  },
+  {
+    "collection_id": "reference/celltype_purity",
+    "source_file": "nonimmune/celltype_purity.csv",
+    "sha256": "db0bcdd0a07c04682346399c05c1866a884f850991843cc17cb0087b44eeb852"
+  },
+  {
+    "collection_id": "reference/confusion_crosstab",
+    "source_file": "nonimmune/confusion_crosstab.csv",
+    "sha256": "0568187a2ed6862cb90d3c27a031256b674c295e4806908c8bebdfbd51297a54"
+  },
+  {
+    "collection_id": "reference/separation_metrics",
+    "source_file": "immune_fine/separation_metrics.csv",
+    "sha256": "893a3ae10ef2bbe2f46ca9625b7bcb2cb2f44048a8f76577628ab786ca7b5f2c"
+  },
+  {
+    "collection_id": "reference/per_celltype_patient_spread",
+    "source_file": "immune_fine/per_celltype_patient_spread.csv",
+    "sha256": "92c938dc89aeabbe5aaecc454f0e4236292797738e74d02bf6581b0fa4b11320"
+  },
+  {
+    "collection_id": "reference/celltype_purity",
+    "source_file": "immune_fine/celltype_purity.csv",
+    "sha256": "3769f07c10ce785751eb0d2126e44a5f1cae0e30cab60e1e1e73b03eeaf1e8d4"
+  },
+  {
+    "collection_id": "reference/confusion_crosstab",
+    "source_file": "immune_fine/confusion_crosstab.csv",
+    "sha256": "27ac0af63993c2864c5a98e3bc88910650a7b196dcfd05a3dc02dc2334da914a"
   }
 ]
