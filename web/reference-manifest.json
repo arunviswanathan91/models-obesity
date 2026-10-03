@@ -1,0 +1,128 @@
+[
+  {
+    "collection_id": "reference/pca_pc_bmi_associations",
+    "source_file": "pca_pc_bmi_associations.csv",
+    "sha256": "c51c9e5e7c29d5f52a364a3ed7143292e6d7d38b954cc2b83301d8143df19d3e",
+    "rows": 30
+  },
+  {
+    "collection_id": "reference/pca_component_contributions",
+    "source_file": "pca_component_contributions.csv",
+    "sha256": "07546bf0533b434477406d41b73c3659206cf165ad78d8238800a505e6b79c44",
+    "rows": 500
+  },
+  {
+    "collection_id": "reference/pca_explained_variance",
+    "source_file": "pca_explained_variance.csv",
+    "sha256": "3e475c39705d8bee4aad3dac0c3c6366a8ed3db5dda1c7d56eceb17efaa49a57",
+    "rows": 60
+  },
+  {
+    "collection_id": "reference/pca_tiered_vs_strict_stability",
+    "source_file": "pca_tiered_vs_strict_stability.csv",
+    "sha256": "93acc95d6fa526778e9483acfb36e43b5c7e5ee140c35024169c73aa41d8dc34",
+    "rows": 3
+  },
+  {
+    "collection_id": "reference/pca_input_counts",
+    "source_file": "pca_input_counts.csv",
+    "sha256": "da32f7672159ac90cb33d4853686d0c0f8bee35ca31960b99151d9caec5514f2",
+    "rows": 6
+  },
+  {
+    "collection_id": "reference/theta_bmi_multiplicity_recalculated",
+    "source_file": "theta_bmi_multiplicity_recalculated.csv",
+    "sha256": "df0ee7b9d32fd3ea7785a5d50e523e78b5e99d9e690ec9b05fe3cf7f87295fa1",
+    "rows": 51
+  },
+  {
+    "collection_id": "reference/component_inclusion_tiers",
+    "source_file": "component_inclusion_tiers.csv",
+    "sha256": "16494a18ed467223134f0aed2efbf63c084d2f6b09332ca9854a9c403dd67294",
+    "rows": 47
+  },
+  {
+    "collection_id": "reference/normalized_dependence_summary",
+    "source_file": "normalized_dependence_summary.csv",
+    "sha256": "799e1b8ccb28403ee65d690292d96ddae62d5c0155e3fa1e416e517edc632bce",
+    "rows": 12
+  },
+  {
+    "collection_id": "reference/normalized_dependence_by_celltype",
+    "source_file": "normalized_dependence_by_celltype.csv",
+    "sha256": "e270942ddf0a5f5636d3f0af05e49b32755cb2a63fff8d3cf17ba5f84f291fe0",
+    "rows": 94
+  },
+  {
+    "collection_id": "reference/raw_vs_normalized_summary",
+    "source_file": "raw_vs_normalized_summary.csv",
+    "sha256": "da62055a06c2ff3d07cc430c9d8038dd32c1c78ef1ce098550e5f4158727d048",
+    "rows": 6
+  },
+  {
+    "collection_id": "reference/cap3_vs_cap5_summary",
+    "source_file": "cap3_vs_cap5_summary.csv",
+    "sha256": "56105ce835fabf1335eaba2e1940728a1b27dd1dcba51a8e2cfe608ffccc0dbb",
+    "rows": 6
+  },
+  {
+    "collection_id": "reference/component_reliability_all",
+    "source_file": "component_reliability_all.csv",
+    "sha256": "ff6df741feb47aa6dde12ccce61d11b8fdb79f16fa2336613ae357fee0d5186f",
+    "rows": 47
+  },
+  {
+    "collection_id": "signatures/audited_gene_sets",
+    "source_file": "Final_Refined_Signatures_Gemini.json",
+    "sha256": "3a6cc8e21208e1f6fe0af605da077229e7647d935ddb38a102351e62925ed456",
+    "rows": 2242
+  },
+  {
+    "collection_id": "single_cell/annotation_counts",
+    "source_file": "annotation_summary_blueprint_fine.csv",
+    "sha256": "3f5d5fc75692a02014e6f9c0742a27422a2c670649d8f822f738884c1f2c7697",
+    "rows": 23
+  },
+  {
+    "collection_id": "single_cell/annotation_counts",
+    "source_file": "annotation_summary_blueprint_main.csv",
+    "sha256": "fa8f0414f2211b57098bafd5dc7c95291a15fd1761b3e5582ea520be5720f104",
+    "rows": 8
+  },
+  {
+    "collection_id": "single_cell/annotation_counts",
+    "source_file": "annotation_summary_novershtern_fine.csv",
+    "sha256": "19172d27ad08f59389cf9a8ba45af6d06c6b4a53474fe9916459401fff6f9116",
+    "rows": 24
+  },
+  {
+    "collection_id": "single_cell/annotation_counts",
+    "source_file": "annotation_summary_novershtern_main.csv",
+    "sha256": "54e4ac538827742e73f7ea6b93417f51a44e92070acaa9096209e503d9080d6f",
+    "rows": 11
+  },
+  {
+    "collection_id": "single_cell/annotation_counts",
+    "source_file": "annotation_summary_monaco_fine.csv",
+    "sha256": "410a92475785b4966c6dadbe2c816ea5f2c19130b5ee79e25229b70d0c441cca",
+    "rows": 28
+  },
+  {
+    "collection_id": "single_cell/annotation_counts",
+    "source_file": "annotation_summary_monaco_main.csv",
+    "sha256": "ce503e317d90ecfc93dbd01e9e7dd2e98cb05cf557d7aa55ef9b37acf9feaf81",
+    "rows": 9
+  },
+  {
+    "collection_id": "single_cell/annotation_counts",
+    "source_file": "annotation_summary_dice_fine.csv",
+    "sha256": "e60687cef2dff9f0d5dd436d5f7dd5fbec4348e78f04876033f541e8e8b7536a",
+    "rows": 15
+  },
+  {
+    "collection_id": "single_cell/annotation_counts",
+    "source_file": "annotation_summary_dice_main.csv",
+    "sha256": "8363725744a572da002156a2c17f64a518ca5ecec54a1c6603321d3b8411e0d7",
+    "rows": 5
+  }
+]
