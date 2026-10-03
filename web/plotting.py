@@ -134,6 +134,28 @@ def render(request_json):
             fig.axes[0].set_xlabel('Cell type' if df.cell_type.notna().any() else 'Effect component')
             fig.axes[0].set_ylabel('Signature / feature')
             note=f'{len(row_names)} rows ranked by maximum absolute posterior mean. Original study heatmap renderer. Scale: −{vmax:.3g} (blue) to +{vmax:.3g} (magenta), white = 0; units: {units}. Circle: pointwise 95% HDI excludes zero. Empty cells are unavailable.'
+    elif kind in ('scree','contributions','annotation'):
+        fields = ['compartment','analysis_set'] if kind == 'scree' else ['compartment','analysis_set','PC'] if kind == 'contributions' else ['reference','resolution']
+        for field in fields:
+            if field in df and df[field].nunique() > 1:
+                raise ValueError('Select one '+field+' before drawing.')
+        fig,ax=plt.subplots(figsize=(8, max(4, len(df)*.22) if kind != 'scree' else 4))
+        if kind == 'scree':
+            df=df.assign(pc_number=df.PC.str.extract(r'(\d+)',expand=False).astype(int)).sort_values('pc_number')
+            ax.bar(df.PC,df.explained_variance_ratio.astype(float)*100,color=TEAL)
+            ax.set_xlabel('Principal component');ax.set_ylabel('Explained variance (%)')
+            note='Saved PCA of deconvolved bulk-expression scores, not single-cell PCA. No PCA is refitted. Compare tiered and strict QC separately; non-immune geometry has a saved review flag.'
+        elif kind == 'contributions':
+            df=df.sort_values('percent_axis_contribution')
+            ax.barh(df.CellType,df.percent_axis_contribution.astype(float),color=BLUE)
+            ax.set_xlabel('Contribution to PC axis (%)');ax.set_ylabel('Cell type')
+            note='Saved squared-axis contributions aggregated by cell type. These are PCA contributions, not abundance fractions or BMI effect estimates.'
+        else:
+            df=df.sort_values('cell_count')
+            ax.barh(df.annotation,df.cell_count.astype(int),color=TEAL)
+            ax.set_xlabel('Annotated cells');ax.set_ylabel('Reference label')
+            note='Saved reference-based annotation counts. Reference panels are alternative annotations of cells and must not be added together. Counts do not establish annotation accuracy or BMI association.'
+        ax.set_title(title,loc='left',fontsize=11);fig.tight_layout()
     elif kind == 'coverage':
         fig,ax=plt.subplots(figsize=(8,4))
         stages=sorted(df.stage_order.astype(int).unique());width=.32
