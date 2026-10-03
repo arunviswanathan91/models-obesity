@@ -134,6 +134,54 @@ def render(request_json):
             fig.axes[0].set_xlabel('Cell type' if df.cell_type.notna().any() else 'Effect component')
             fig.axes[0].set_ylabel('Signature / feature')
             note=f'{len(row_names)} rows ranked by maximum absolute posterior mean. Original study heatmap renderer. Scale: −{vmax:.3g} (blue) to +{vmax:.3g} (magenta), white = 0; units: {units}. Circle: pointwise 95% HDI excludes zero. Empty cells are unavailable.'
+    elif kind == 'signatures':
+        if df.cell_type.nunique()!=1:
+            raise ValueError('Select one cell type to compare its signatures.')
+        df=df.sort_values('signature').copy()
+        df['gene_count'] = df.genes.map(len)
+        labels=df.signature.str.replace('_Signature','',regex=False).str.replace('_',' ',regex=False)
+        fig,ax=plt.subplots(figsize=(max(10,len(df)*.25),6))
+        ax.bar(np.arange(len(df)),df.gene_count,color=TEAL,width=.75)
+        ax.set_xticks(np.arange(len(df)),labels=labels,rotation=65,ha='right',fontsize=8)
+        ax.set_ylabel('Number of genes');ax.set_xlabel('Signature');ax.set_title(str(df.cell_type.iloc[0]).replace('_',' ')+' — signature composition',loc='left')
+        ax.yaxis.get_major_locator().set_params(integer=True);fig.tight_layout()
+        note=f'All {len(df)} signatures in the filtered cell type are shown. Gene counts describe set composition, not expression, enrichment or statistical significance. Gene membership is listed in the table.'
+    elif kind == 'simulation':
+        for field in ['kind','geometry','contrast','rule']:
+            if field in df and df[field].fillna('').nunique()>1:
+                raise ValueError('Select one '+field+' before comparing scenarios.')
+        metric=req.get('y')
+        if metric not in df:raise ValueError('Choose an available simulation metric.')
+        df[metric]=pd.to_numeric(df[metric],errors='coerce');df=df.dropna(subset=[metric])
+        if df.empty:raise ValueError('No finite values for this metric.')
+        fig,ax=plt.subplots(figsize=(max(8,df.scenario.nunique()*.7),5))
+        if 'replicate' in df:
+            sns.boxplot(data=df,x='scenario',y=metric,color=TEAL,ax=ax,fliersize=2)
+            note='Distribution across simulation replicates within each scenario. Boxes show the median and interquartile range; whiskers extend to 1.5 times that range.'
+        else:
+            if df.duplicated('scenario').any():raise ValueError('Narrow the filters to one summary per scenario.')
+            ax.scatter(df.scenario,df[metric],color=TEAL)
+            mcse=metric.replace('_mean','_mcse') if '_mean' in metric else ''
+            if mcse in df:
+                err=pd.to_numeric(df[mcse],errors='coerce')
+                ax.errorbar(df.scenario,df[metric],yerr=err,fmt='none',color=TEAL,capsize=3)
+                note='Scenario-level estimates with ±1 Monte Carlo standard error. These error bars are not 95% confidence intervals.'
+            else:note='Scenario-level summaries. No uncertainty bars are inferred from unavailable values.'
+        ax.set_xlabel('Scenario');ax.set_ylabel(metric.replace('_',' '));ax.tick_params(axis='x',labelrotation=45);ax.set_title(title,loc='left');fig.tight_layout()
+    elif kind == 'intervals':
+        for field in ['metric','comparison','layer','scope','stratum']:
+            if field in df and df[field].fillna('').nunique()>1:raise ValueError('Select one '+field+' before comparing intervals.')
+        for k in ['estimate','ci_95_lower','ci_95_upper']:df[k]=pd.to_numeric(df[k],errors='coerce')
+        df=df.dropna(subset=['estimate','ci_95_lower','ci_95_upper'])
+        if df.empty:raise ValueError('No complete confidence intervals in this selection.')
+        if len(df)>120:raise ValueError('Select a cell type or family to display at most 120 intervals.')
+        df=df.sort_values('estimate')
+        fig,ax=plt.subplots(figsize=(8,max(4,len(df)*.27)))
+        labels=[' · '.join(str(r[k]).replace('_',' ') for k in ['family','celltype_label','CellType','comparison'] if k in r and str(r[k])) for r in df.to_dict('records')]
+        for i,(_,r) in enumerate(df.iterrows()):
+            ax.plot([r.ci_95_lower,r.ci_95_upper],[i,i],color=BLUE,lw=2);ax.scatter(r.estimate,i,color=TEAL,s=25)
+        ax.set_yticks(range(len(df)),labels=labels);ax.set_xlabel(str(df['metric'].iloc[0]).replace('_',' ') if 'metric' in df else 'Estimate');ax.set_title(title,loc='left');fig.tight_layout()
+        note='Point estimates and reported 95% confidence intervals. These confidence intervals are distinct from Bayesian highest-density intervals.'
     elif kind == 'purity':
         if df.compartment.nunique()!=1:
             raise ValueError('Select one compartment before drawing.')

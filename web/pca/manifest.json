@@ -1,0 +1,32 @@
+[
+  {
+    "file": "pca/nonimmune_raw.png",
+    "sha256": "4f24947756c9d3f934dad2347f5558c7414087b262e168ba5edd93b3d31cfdd3",
+    "description": "Original deconvolution PCA figure; no recomputation."
+  },
+  {
+    "file": "pca/immune_fine_rownorm.png",
+    "sha256": "fd802c9af0cf29a5d7a293393b1fc2cbf67911c5168a962cbd26061033236f74",
+    "description": "Original deconvolution PCA figure; no recomputation."
+  },
+  {
+    "file": "pca/immune_coarse_rownorm.png",
+    "sha256": "dfe92cec2b5c25fdf296cd5de224b5780880fa48cbc5d73e8b7f7a1217cf90e1",
+    "description": "Original deconvolution PCA figure; no recomputation."
+  },
+  {
+    "file": "pca/nonimmune_rownorm.png",
+    "sha256": "fc07fcbe16a6aae40eae9e62f55de082e78ae031a569b4f43755a1768da21432",
+    "description": "Original deconvolution PCA figure; no recomputation."
+  },
+  {
+    "file": "pca/immune_coarse_raw.png",
+    "sha256": "2c06ec5671306b8332b39eca4f8b4228844f0412186eba32a1272f1e6af81161",
+    "description": "Original deconvolution PCA figure; no recomputation."
+  },
+  {
+    "file": "pca/immune_fine_raw.png",
+    "sha256": "104c4fde9b09f090aefa07439d843ac82d46358365cb01a808cd569fdf29456e",
+    "description": "Original deconvolution PCA figure; no recomputation."
+  }
+]
