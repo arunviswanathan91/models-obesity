@@ -1,11 +1,13 @@
 // Python lives in a worker: tables and filters stay responsive during rendering.
 let ready;
 async function initialize(){
-  importScripts('https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js');
-  const py=await loadPyodide({indexURL:'https://cdn.jsdelivr.net/pyodide/v314.0.7/full/'});
+  const runtimeURL=new URL('./runtime/',self.location.href).href;
+  importScripts(runtimeURL+'pyodide.js');
+  const py=await loadPyodide({indexURL:runtimeURL});
   postMessage({status:'Loading the plotting libraries…'});
   await py.loadPackage(['numpy','pandas','matplotlib','micropip']);
-  await py.runPythonAsync("import micropip\nawait micropip.install('seaborn==0.13.2', deps=False)");
+  py.globals.set("seaborn_wheel_url",runtimeURL+"seaborn-0.13.2-py3-none-any.whl");
+  await py.runPythonAsync("import micropip\nawait micropip.install(seaborn_wheel_url, deps=False)");
   const response=await fetch('./plotting.py');if(!response.ok)throw Error('Plotting code could not be loaded.');
   await py.runPythonAsync(await response.text());
   return py;
