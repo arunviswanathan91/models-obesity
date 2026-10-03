@@ -2,7 +2,7 @@
 let ready;
 async function initialize(){
   const runtimeURL=new URL('./runtime/',self.location.href).href;
-  importScripts(runtimeURL+'pyodide.js');
+  const {loadPyodide}=await import(runtimeURL+'pyodide.mjs');
   const py=await loadPyodide({indexURL:runtimeURL});
   postMessage({status:'Loading the plotting libraries…'});
   await py.loadPackage(['numpy','pandas','matplotlib','micropip']);
