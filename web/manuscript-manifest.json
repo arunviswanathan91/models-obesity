@@ -1,0 +1,146 @@
+{
+  "release": "manuscript_ptm_20261004",
+  "source_archive_sha256": "53215d71cc385b3a1dc8fc33e442953fac9bf4de18df8270ca06a1e3a70bfc98",
+  "datasets": [
+    {
+      "id": "manuscript/ptm_heatmap_lookup",
+      "source_file": "selection/PTM_full_label_lookup.csv",
+      "sha256": "0cc354f7ee065d2b65733c21319a64b0792687a6d2038880c912092cb2a1a5c2",
+      "rows": 34,
+      "source_rows": 34
+    },
+    {
+      "id": "manuscript/phospho_labels",
+      "source_file": "selection/ptm_phospho_label_map.csv",
+      "sha256": "286deb316bebd95a7b5ab1caff1eefde7b68b85bfd90536bdb413d519c745fdc",
+      "rows": 14,
+      "source_rows": 14
+    },
+    {
+      "id": "manuscript/glyco_labels",
+      "source_file": "selection/ptm_glyco_label_map.csv",
+      "sha256": "f15fa0978e729cf74a36e0b37457cab732562a532029809bfe608e9a32fadf29",
+      "rows": 20,
+      "source_rows": 20
+    },
+    {
+      "id": "manuscript/rna_protein_labels",
+      "source_file": "selection/rna_protein_label_map.csv",
+      "sha256": "f9df4a9fdfb829060d80240bcfabea0c7ca28cd854cb641ab73bc4f400551b77",
+      "rows": 16,
+      "source_rows": 16
+    },
+    {
+      "id": "manuscript/rna_heatmap_values",
+      "source_file": "heatmaps/paper_rna_top_heatmap_displayed_values.csv",
+      "sha256": "8aa093b43049aa194bca349c1fd90b783c2119591f6f18e9341fe7eaadd4e1b3",
+      "rows": 131,
+      "source_rows": 131
+    },
+    {
+      "id": "manuscript/rna_protein_heatmap_values",
+      "source_file": "heatmaps/paper_rp_top_heatmap_displayed_values.csv",
+      "sha256": "e00e56c54137f69573195ceb9084da1e1bf55715cf6b7932024e14d96fd3d974",
+      "rows": 48,
+      "source_rows": 48
+    },
+    {
+      "id": "manuscript/candidate_sensitivity_coverage",
+      "source_file": "updated_ptm_tables/candidate_sensitivity_availability.csv",
+      "sha256": "f677cea1418278dcf3306db906b3228d5ad2bc2e42d8c1f477488374b4966162",
+      "rows": 81,
+      "source_rows": 81
+    },
+    {
+      "id": "manuscript/sensitivity_feature_labels",
+      "source_file": "PTM_extended/tables/feature_identity_map.csv",
+      "sha256": "79e03f0250e76f4e83eff4cbee2c250df577b28f2287115400ec08cb40e7b4c9",
+      "rows": 24,
+      "source_rows": 24
+    },
+    {
+      "id": "manuscript/sensitivity_comparisons",
+      "source_file": "PTM_extended/tables/matched_conditional_comparisons.csv",
+      "sha256": "59beba0c5417cd145298da6ad029008180aabad4d3d3e96bdd6ff9188395a150",
+      "rows": 192,
+      "source_rows": 192
+    },
+    {
+      "id": "manuscript/sensitivity_classifications",
+      "source_file": "PTM_extended/tables/interval_classification_summary.csv",
+      "sha256": "9381ae982c13c5249749b1b3fe3cf4c4faa329f6a99b143fcfd7d63829ca6f8e",
+      "rows": 8,
+      "source_rows": 8
+    },
+    {
+      "id": "manuscript/ptm_calibration_summary",
+      "source_file": "PTM_extended/tables/calibration_summary_recomputed.csv",
+      "sha256": "d34f0ab32b1f966346dfee5a01fe6204e079f1fcdc7d02639acd8e6a677558d7",
+      "rows": 60,
+      "source_rows": 60
+    },
+    {
+      "id": "manuscript/ptm_calibration_templates",
+      "source_file": "PTM_extended/tables/calibration_by_template.csv",
+      "sha256": "1970bf4286e161ac03577d7a20de5b2fbf98146d00b6cf59de4832307da32650",
+      "rows": 120,
+      "source_rows": 120
+    },
+    {
+      "id": "manuscript/ptm_calibration_replicates",
+      "source_file": "PTM_extended/tables/calibration_replicate_metrics.csv",
+      "sha256": "52fcdb77de8afca8665d8a9b00944af0e44c82d36d5b4536bc15811e2ef9b46e",
+      "rows": 1500,
+      "source_rows": 1500
+    },
+    {
+      "id": "manuscript/ptm_calibration_completion",
+      "source_file": "PTM_extended/tables/calibration_completion.csv",
+      "sha256": "5e28ce1e3bdeec8545fee6ad23d96b312e46fa6ade2f878843563e209203faea",
+      "rows": 5,
+      "source_rows": 5
+    },
+    {
+      "id": "manuscript/ptm_sbc_bins",
+      "source_file": "PTM_extended/tables/sbc_rank_bins.csv",
+      "sha256": "58b8a8acd9cb16dc537063bda6c0116cb8f20a9ff3a0a4ec1d3d4b06b3aacf1c",
+      "rows": 48,
+      "source_rows": 48
+    },
+    {
+      "id": "manuscript/ptm_sbc_values",
+      "source_file": "PTM_extended/tables/sbc_rank_values.csv",
+      "sha256": "5ecf44f024b6950d3e5d3cdba3e6d4f09e0f92f3652d0267a9fb02ed1a919d09",
+      "rows": 300,
+      "source_rows": 300
+    },
+    {
+      "id": "manuscript/asah1_labels",
+      "source_file": "paper_asah1_conditional.csv",
+      "sha256": "2a9af287d2bd467080ee9a9bc50bd6dd870123578ed893d3ad5c0a96862cd6fe",
+      "rows": 20,
+      "source_rows": 20
+    },
+    {
+      "id": "ptm/asah1_paired",
+      "source_file": "asah1_paired_effects_95HDI.csv",
+      "sha256": "62a314f7f282c6b92d67802d1c2da0c000d82a96a56748bf94eba13dfce482a7",
+      "rows": 120,
+      "source_rows": 120
+    },
+    {
+      "id": "ptm/extended_sensitivity_effects",
+      "source_file": "PTM_extended/tables/all_effects_95HDI.csv",
+      "sha256": "5ec250642cc283c2a8ce96786b77b445b0a93be2efbd9573fedf16f0f8d4d104",
+      "rows": 1296,
+      "source_rows": 1296
+    },
+    {
+      "id": "ptm/extended_sensitivity_predictive",
+      "source_file": "PTM_extended/tables/sensitivity_predictive_checks.csv",
+      "sha256": "535ee2e520fc5d34771863ae8d08ae35bd5fff94cb5a2c53ff919f7ad158df83",
+      "rows": 1344,
+      "source_rows": 1344
+    }
+  ]
+}

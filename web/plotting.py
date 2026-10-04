@@ -80,6 +80,184 @@ def draw_heatmap(features, row_names, columns, palette, home, vmax, stem, sectio
         spine.set_edgecolor("black")
     export_figure(fig, stem, section)
 
+# Adapters for the supplied manuscript Python plotting code.
+# Figures are computed from result rows; no pre-rendered assets are fetched.
+import matplotlib as mpl
+from matplotlib.lines import Line2D
+import textwrap, re
+BLUE, LIGHT_BLUE, MAGENTA, LIGHT_MAGENTA = "#2C5AA0", "#A9BEDF", "#D81B60", "#F2B6CB"
+TEAL, LIGHT_TEAL, MID_TEAL = "#0E7C7B", "#BFE3E2", "#5FAFAE"
+INK, MID_GREY, GRID_GREY = "#1F1F1F", "#6F7378", "#DCDDE0"
+DIVERGING = mpl.colors.LinearSegmentedColormap.from_list("d", [BLUE, "white", MAGENTA])
+SIZE = {"base": 9.5, "tick": 9, "ytick": 10.5, "label": 9.5, "title": 11.5, "legend": 10, "value": 8.5,
+        "axis_line": 0.9, "grid_line": 0.45, "data_line": 1.6, "interval_line": 1.9, "zero_line": 1.0, "marker": 32}
+MANUSCRIPT_STYLE = {
+    "font.family": "sans-serif", "font.sans-serif": ["Arial", "Liberation Sans", "DejaVu Sans"],
+    "font.size": SIZE["base"], "axes.titlesize": SIZE["title"], "axes.titleweight": "bold",
+    "axes.titlelocation": "left", "axes.titlepad": 6, "axes.labelsize": SIZE["label"], "axes.labelpad": 4,
+    "axes.edgecolor": INK, "axes.linewidth": SIZE["axis_line"], "axes.spines.top": False,
+    "axes.spines.right": False, "axes.facecolor": "white", "xtick.labelsize": SIZE["tick"],
+    "ytick.labelsize": SIZE["ytick"], "xtick.major.size": 3.5, "ytick.major.size": 3.5,
+    "xtick.major.width": 0.8, "ytick.major.width": 0.8, "xtick.color": INK, "ytick.color": INK,
+    "legend.fontsize": SIZE["legend"], "legend.frameon": False, "lines.linewidth": SIZE["data_line"],
+    "grid.color": GRID_GREY, "grid.linewidth": SIZE["grid_line"], "figure.facecolor": "white",
+    "savefig.facecolor": "white", "svg.fonttype": "none"}
+
+
+def panel(w, h, left, right=0.14, bottom=0.62, top=0.36):
+    fig = plt.figure(figsize=(left + w + right, bottom + h + top))
+    ax = fig.add_axes([left / (left + w + right), bottom / (bottom + h + top),
+                       w / (left + w + right), h / (bottom + h + top)])
+    return fig, ax
+
+
+def style_axis(ax, grid="x"):
+    for side in ("left", "bottom"):
+        ax.spines[side].set_linewidth(SIZE["axis_line"])
+    if grid:
+        ax.grid(axis=grid, zorder=0)
+        ax.set_axisbelow(True)
+
+
+def set_title(ax, text_):
+    fig = ax.figure
+    fig_w = fig.get_size_inches()[0]
+    pos = ax.get_position()
+    left_in = pos.x0 * fig_w
+    axes_w = pos.width * fig_w
+    title = ax.set_title(text_, fontsize=SIZE["title"], fontweight="bold", loc="left")
+    title.set_x(-left_in / axes_w + 0.005)
+
+
+SCENARIOS=['null','protein_only','conditional_signal','heavy_tails','sbc']
+SCENARIO_LABELS={'null':'Null','protein_only':'Protein only','conditional_signal':'Conditional signal','heavy_tails':'Heavy tails','sbc':'SBC (prior predictive)'}
+QUANTITIES={'beta_protein':'Protein BMI slope','beta_ptm':'Marginal PTM BMI slope','beta_conditional':'Protein-conditioned BMI slope','rho':'Residual correlation','coupling':'Protein-to-PTM coupling','nu':'Student-t degrees of freedom'}
+VARIANTS=['primary','fixed_plex','stage_subset_base','stage_adjusted','wes_subset_base','wes_adjusted','mutation_adjusted','exclude_recorded_weight_loss','exclude_adenosquamous']
+VLAB={'primary':'Primary','fixed_plex':'Fixed plex','stage_subset_base':'Stage subset','stage_adjusted':'Stage adjusted','wes_subset_base':'Purity subset','wes_adjusted':'Purity adjusted','mutation_adjusted':'Mutation adjusted','exclude_recorded_weight_loss':'Exclude weight loss','exclude_adenosquamous':'Exclude adenosquamous'}
+COMPARISONS=[('primary','fixed_plex'),('primary','stage_subset_base'),('stage_subset_base','stage_adjusted'),('primary','wes_subset_base'),('wes_subset_base','wes_adjusted'),('primary','mutation_adjusted'),('primary','exclude_recorded_weight_loss'),('primary','exclude_adenosquamous')]
+CLAB=['Fixed plex','Stage subset restriction','Stage adjustment (matched)','Purity subset restriction','Purity adjustment (matched)','Mutation adjustment','Exclude recorded weight loss','Exclude adenosquamous']
+
+
+def feature_labels(df, gene='gene', feature='feature_id'):
+    # Keep peptide sequence where needed to distinguish equal glycan compositions.
+    def label(r):
+        f=re.sub(r'\[[^]]*\]', '', str(r[feature]))
+        f=re.sub(r'^n(?=[A-Z])', '', f)
+        f=re.sub(r'([NHFSG])0(?=[NHFSG]|$)', '', f)
+        if '_' in f and re.search(r'_[STY]\d+$',f): f=f.rsplit('_',1)[-1]
+        return str(r[gene])+' | '+f
+    return df.apply(label,axis=1).tolist()
+
+def manuscript_plot(df, req):
+    kind=req['type']
+    with mpl.rc_context(MANUSCRIPT_STYLE):
+        return _manuscript_plot(df,req,kind)
+
+def _manuscript_plot(df,req,kind):
+    if kind in ('ptm_primary','ptm_colourbar'):
+        scale=pd.DataFrame(req.get('scale_rows') or req['rows'])
+        vmax=max(float(np.abs(scale[['posterior_mean_marginal','posterior_mean_conditional']].to_numpy()).max()),1e-8)
+        if kind=='ptm_colourbar':
+            fig=plt.figure(figsize=(1.25,3)); ax=fig.add_axes([.12,.05,.16,.9])
+            bar=fig.colorbar(mpl.cm.ScalarMappable(norm=mpl.colors.Normalize(-vmax,vmax),cmap=DIVERGING),cax=ax)
+            bar.outline.set_linewidth(1);bar.ax.tick_params(length=3,width=.8,labelsize=9)
+            bar.ax.yaxis.set_major_locator(mpl.ticker.MaxNLocator(5,symmetric=True))
+            bar.set_label('Posterior mean (response SD per\n5 kg/m² higher BMI, within plex)',fontsize=9.5,fontweight='bold',labelpad=6)
+        else:
+            labels=df.short_label.tolist()
+            if len(set(labels))!=len(labels):labels=feature_labels(df)
+            if len(set(labels))!=len(labels):raise ValueError('Feature labels are not unique; narrow the selection.')
+            rows=[]
+            for (_,r),label in zip(df.iterrows(),labels):
+                for suffix,col in [('marginal','Marginal PTM'),('conditional','Protein-conditioned PTM')]:
+                    rows.append(dict(signature_label=label,celltype_label=col,value=r['posterior_mean_'+suffix],hdi_95_excludes_zero=r['hdi_95_lower_'+suffix]>0 or r['hdi_95_upper_'+suffix]<0))
+            draw_heatmap(pd.DataFrame(rows),labels,['Marginal PTM','Protein-conditioned PTM'],{},{},vmax,'browser','extended','Supported BMI effects','value')
+            fig=_CAPTURED;fig.axes[0].set_xlabel('BMI association',fontsize=HM_LABEL,fontweight='bold');fig.axes[0].set_ylabel('PTM feature',fontsize=HM_LABEL,fontweight='bold')
+        return fig, f'Original heatmap code; {len(df)} selected features. Shared symmetric colour scale ±{vmax:.3g}. White circles: pointwise 95% HDI excludes zero. No panel-wide multiplicity correction. Full identities remain in the table.'
+    if kind=='manuscript_heatmap':
+        if df.duplicated(['signature_label','celltype_label']).any():raise ValueError('Duplicate heatmap cells; narrow the selection.')
+        rows=list(dict.fromkeys(df.signature_label));cols=list(dict.fromkeys(df.celltype_label));vmax=max(float(df.value.abs().max()),1e-8)
+        draw_heatmap(df,rows,cols,{},{},vmax,'browser','extended','','value');fig=_CAPTURED
+        return fig,f'Original study heatmap code. {len(rows)} rows; colour scale ±{vmax:.3g}. White circles indicate pointwise 95% HDIs excluding zero; missing combinations remain blank.'
+    if kind=='sensitivity_grid':
+        if df.quantity.nunique()!=1:raise ValueError('Select one model quantity.')
+        identities=df[['key','gene','feature_id']].drop_duplicates().sort_values(['gene','feature_id']);order=identities.key.tolist();labels=feature_labels(identities)
+        variants=[v for v in VARIANTS if v in set(df.variant)]
+        if df.duplicated(['key','variant']).any():raise ValueError('Select one quantity and contrast.')
+        matrix=df.pivot(index='key',columns='variant',values='posterior_mean').reindex(index=order,columns=variants)
+        good=df.pivot(index='key',columns='variant',values='numerical_checks_pass').reindex(index=order,columns=variants)
+        resolved=df.pivot(index='key',columns='variant',values='hdi_excludes_zero').reindex(index=order,columns=variants)
+        vmax=float(np.nanmax(np.abs(matrix.to_numpy()))) or .01
+        f,ax=panel(4.9,.245*len(order),left=text_width(labels,9)+.2,bottom=1.55,top=.42,right=.15)
+        ax.imshow(matrix,aspect='auto',cmap=DIVERGING,vmin=-vmax,vmax=vmax)
+        for i in range(len(order)):
+            for j in range(len(variants)):
+                if pd.isna(matrix.iloc[i,j]):continue
+                if not good.iloc[i,j]:ax.text(j,i,'×',ha='center',va='center',color=INK)
+                elif resolved.iloc[i,j]:ax.plot(j,i,'o',ms=3.5,mfc='none',mec=INK,mew=.65)
+        ax.set_xticks(range(len(variants)),[VLAB[v] for v in variants],rotation=50,ha='right',fontsize=9)
+        ax.set_yticks(range(len(order)),labels);ax.tick_params(length=0)
+        for i in range(1,len(identities)):
+            if identities.gene.iloc[i]!=identities.gene.iloc[i-1]:ax.axhline(i-.5,color='white',lw=1.3)
+        set_title(ax,'Expanded PTM sensitivities')
+        return f,f'Supplied sensitivity plotting code; {len(order)} selected features. Colour scale ±{vmax:.3g}; '+str(df.effect_units.iloc[0])+'. Open circles: pointwise 95% HDIs exclude zero. Subset restriction and covariate adjustment are separate analyses. No multiplicity control.'
+    if kind=='sensitivity_comparison':
+        if df.comparison.nunique()!=1:raise ValueError('Select one matched comparison.')
+        x=df.sort_values(['gene_base','feature_id_base']).reset_index(drop=True);order=x.key.tolist();labels=feature_labels(x,'gene_base','feature_id_base')
+        f,ax=panel(4.65,.26*len(order),left=text_width(labels,9)+.2,bottom=.65,top=.62,right=.45)
+        for i,r in x.iterrows():
+            if i%2==0:ax.axhspan(i-.5,i+.5,color='#F6F6F6',zorder=0)
+            for suffix,offset,color in [('base',-.14,BLUE),('alt',.14,MAGENTA)]:
+                lo,hi,mu=r['hdi_95_lower_'+suffix],r['hdi_95_upper_'+suffix],r['posterior_mean_'+suffix]
+                adequate=bool(r['numerical_checks_pass_'+suffix]);color=color if adequate else MID_GREY
+                ax.hlines(i+offset,lo,hi,color=color,lw=SIZE['interval_line'],zorder=2)
+                ax.plot(mu,i+offset,marker='o' if adequate else 'x',ms=4,mec=color,mfc=color if (lo>0 or hi<0) else 'white',ls='',zorder=3)
+        ax.axvline(0,color=MID_GREY,lw=1,ls='--');ax.set_yticks(range(len(order)),labels);ax.invert_yaxis();ax.set_xlabel('Protein-conditioned BMI slope (SD per 5 kg/m²)');style_axis(ax)
+        set_title(ax,str(x.comparison.iloc[0])+'\n'+VLAB[x.variant_base.iloc[0]]+' versus '+VLAB[x.variant_alt.iloc[0]])
+        return f,'Blue: reference; pink: sensitivity. Filled/open points exclude/include zero in pointwise 95% HDIs. Stage and purity adjustment use matched subset baselines. Classification differences are descriptive, not posterior contrast tests.'
+    if kind=='sensitivity_classification':
+        t=df;ids=range(int(t.total.max()))
+        f,ax=panel(4.6,2.55,left=2.65,bottom=.62,top=.42,right=.2);y=np.arange(len(t))
+        ax.barh(y,t.same_class,color=BLUE,label='Same interval class');ax.barh(y,t.changed_class,left=t.same_class,color=MAGENTA,label='Changed interval class')
+        ax.barh(y,t.numerical_failures,left=t.adequate,color=GRID_GREY,label='Numerical failure')
+        ax.set_yticks(y,t.comparison,fontsize=9);ax.invert_yaxis();ax.set_xlabel('Selected modified features');ax.set_xlim(0,len(ids));style_axis(ax);set_title(ax,'Interval classification across sensitivity comparisons')
+        return f,'Same (blue) versus changed (pink) interval classification within the selected features; gray denotes numerical failures. Descriptive counts, not discovery rates.'
+    if kind.startswith('calibration_') and kind!='calibration_completion':
+        metric=kind.removeprefix('calibration_');summary=df;scope_colors={'All completed':BLUE,'Numerically adequate':MAGENTA}
+        if 'template' in df and df.template.nunique()!=1:raise ValueError('Select one calibration template.')
+        if df.duplicated(['quantity','scope','scenario']).any():raise ValueError('Repeated calibration summaries; narrow the selection.')
+        f,axs=plt.subplots(3,2,figsize=(7.4,8.6));f.subplots_adjust(left=.22,right=.98,bottom=.065,top=.94,wspace=.30,hspace=.60)
+        for ax,(q,title) in zip(axs.flat,QUANTITIES.items()):
+            for scope,offset in [('All completed',-.12),('Numerically adequate',.12)]:
+                g=summary[(summary.scope==scope)&(summary.quantity==q)].set_index('scenario').reindex(SCENARIOS);xx=g[metric].to_numpy();yy=np.arange(5)+offset
+                if metric=='coverage':err=np.vstack([xx-g.coverage_low,g.coverage_high-xx])
+                elif metric=='bias':err=1.96*g.bias_mcse.to_numpy()
+                else:err=None
+                ax.errorbar(xx,yy,xerr=err,fmt='o',ms=4,color=scope_colors[scope],lw=1.4,capsize=2)
+            ax.set_yticks(range(5),[SCENARIO_LABELS[s] for s in SCENARIOS] if list(QUANTITIES).index(q)%2==0 else ['']*5,fontsize=9);ax.invert_yaxis();ax.set_title(textwrap.fill(title,28),fontsize=10,loc='left');style_axis(ax)
+            if metric=='coverage':ax.axvline(.95,color=MID_GREY,ls='--',lw=1);ax.set_xlim(0,1.03);ax.set_xlabel('95% HDI coverage')
+            elif metric=='bias':ax.axvline(0,color=MID_GREY,ls='--',lw=1);ax.set_xlabel('Bias (parameter units)')
+            else:ax.set_xlim(left=0);ax.set_xlabel('RMSE (parameter units)')
+        return f,'Supplied calibration plotting code. Blue: all completed; pink: numerically adequate. Coverage bars: 95% Wilson intervals; bias bars: ±1.96 Monte Carlo SE; RMSE has no uncertainty bars. Dashed lines: nominal 0.95 coverage or zero bias. SBC is prior predictive. No screen-wide false-discovery guarantee.'
+    if kind=='calibration_completion':
+        shown=[s for s in SCENARIOS if s in set(df.scenario)];counts=df.set_index('scenario').loc[shown]
+        f,ax=panel(4.2,1.85,left=1.75,bottom=.65,top=.4,right=.2);y=np.arange(len(shown))
+        ax.barh(y,counts.adequate,color=BLUE);ax.barh(y,counts.failed,left=counts.adequate,color=MAGENTA);ax.set_yticks(y,[SCENARIO_LABELS[s] for s in shown]);ax.invert_yaxis();ax.set_xlabel('Completed calibration replicates');style_axis(ax);set_title(ax,'PTM calibration numerical checks')
+        return f,'Completed simulated datasets; blue passes numerical checks, pink fails. Completion and numerical adequacy are distinct.'
+    if kind=='sbc_ranks':
+        f,axs=plt.subplots(2,3,figsize=(7.6,5.5));f.subplots_adjust(left=.08,right=.98,bottom=.09,top=.94,wspace=.3,hspace=.5)
+        for ax,(q,title) in zip(axs.flat,QUANTITIES.items()):
+            g=df[df.quantity.eq(q)].sort_values('bin_left')
+            if g.empty:ax.set_visible(False);continue
+            edges=np.r_[g.bin_left.to_numpy(),g.bin_right.iloc[-1]];centres=(g.bin_left.to_numpy()+g.bin_right.to_numpy())/2
+            counts=g['count'].to_numpy();bc=g.failed.to_numpy();expected=g.expected.to_numpy();low=g.reference_low.to_numpy();high=g.reference_high.to_numpy()
+            ax.bar(centres,counts,width=.112,color=BLUE,edgecolor='white',zorder=2)
+            ax.bar(centres,bc,bottom=counts-bc,width=.112,color=MAGENTA,edgecolor='white',zorder=3)
+            ax.plot(centres,expected,color=INK,lw=1,ls='--');ax.step(edges,np.r_[high,high[-1]],where='post',color=MID_GREY,lw=.8);ax.step(edges,np.r_[low,low[-1]],where='post',color=MID_GREY,lw=.8)
+            ax.set_title(textwrap.fill(title,24),fontsize=10,loc='left');ax.set_xlabel('Rank / (draws + 1)');ax.set_ylabel('Replicates' if list(QUANTITIES).index(q)%3==0 else '');ax.set_xlim(0,1);ax.set_ylim(0,max(float(counts.max()),float(high.max()))*1.22);ax.text(.98,.94,f'n={counts.sum()}; failed={bc.sum()}',ha='right',va='top',transform=ax.transAxes,fontsize=8);style_axis(ax,grid='y')
+        return f,'Prior-predictive SBC only. Blue: adequate; pink: failures retained. Dashed expected counts and gray pointwise 95% binomial limits use discrete uniform ranks. Not simultaneous bands or a formal calibration test. Fixed tie seed 20261004.'
+    raise ValueError('Unknown manuscript plot type')
+
 def render(request_json):
     global _CAPTURED
     req = json.loads(request_json)
@@ -90,7 +268,9 @@ def render(request_json):
     limit = min(60, max(1, int(req.get('limit',20))))
     title = req.get('title','Extended results')
     note = ''
-    if kind in ('forest','heatmap'):
+    if kind in ('ptm_primary','ptm_colourbar','manuscript_heatmap','sensitivity_grid','sensitivity_comparison','sensitivity_classification','calibration_coverage','calibration_bias','calibration_rmse','calibration_completion','sbc_ranks'):
+        fig,note=manuscript_plot(df,req)
+    elif kind in ('forest','heatmap'):
         for c in ['units','contrast','component','variant','entity_level']:
             if c in df and df[c].fillna('').nunique() > 1:
                 raise ValueError('Choose one '+c.replace('_',' ')+' before drawing. Different quantities must not be pooled.')
@@ -116,6 +296,7 @@ def render(request_json):
             note=f'{len(df)} rows with largest absolute posterior means in the filtered selection. Bars: pointwise 95% HDIs; filled dots: HDI excludes zero. No discovery claim or multiplicity correction.'
         else:
             # Unique feature strings distinguish multiple PTM sites within a gene.
+            if 'cell_type' not in df:df['cell_type']=None
             if df['cell_type'].notna().any():
                 df['signature_label']=df['label'].astype(str)
                 df['celltype_label']=df['cell_type'].fillna('Other')
@@ -238,8 +419,12 @@ def render(request_json):
             note=f'{len(df)} finite rows from the filtered table. A distribution of saved values, not posterior draws. No pooling-based inference.'
         if df.empty:raise ValueError('No finite numeric values for these axes.')
         ax.set_title(title,loc='left',fontsize=11);fig.tight_layout()
+    # Seaborn can leave axis-label clipping enabled on narrow heatmaps.
+    for ax in fig.axes:
+        ax.xaxis.label.set_clip_on(False)
+        ax.yaxis.label.set_clip_on(False)
     svg=io.StringIO();png=io.BytesIO()
-    fig.savefig(svg,format='svg',bbox_inches='tight',pad_inches=.12)
-    fig.savefig(png,format='png',dpi=180,bbox_inches='tight',pad_inches=.12)
+    fig.savefig(svg,format='svg',bbox_inches='tight',pad_inches=.12,bbox_extra_artists=[label for ax in fig.axes for label in (ax.xaxis.label,ax.yaxis.label)])
+    fig.savefig(png,format='png',dpi=180,bbox_inches='tight',pad_inches=.12,bbox_extra_artists=[label for ax in fig.axes for label in (ax.xaxis.label,ax.yaxis.label)])
     plt.close(fig)
     return json.dumps({'svg':svg.getvalue(),'png':base64.b64encode(png.getvalue()).decode(),'caption':note})

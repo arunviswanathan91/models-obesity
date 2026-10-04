@@ -1,7 +1,7 @@
 import {CONFIG} from './config.js';
 import {PROGRAMME_LABELS} from './programme-labels.js';
 const $=id=>document.getElementById(id);
-const sections=[['rna','RNA programmes'],['rna_protein','RNA–protein'],['ptm','Protein & PTM'],['simulation','Simulations'],['reference','Deconvolution & PCA'],['signatures','Gene signatures'],['single_cell','Single-cell reference']];
+const sections=[['rna','RNA programmes'],['rna_protein','RNA–protein'],['ptm','Protein & PTM'],['manuscript','Manuscript data'],['simulation','Simulations'],['reference','Deconvolution & PCA'],['signatures','Gene signatures'],['single_cell','Single-cell reference']];
 const state={catalog:[],section:'rna',dataset:null,rows:[],filtered:[],facets:{},page:0,view:'plot',mode:'biology',version:0,figure:null,worker:null,plotId:0};
 const cache=new Map();
 const number=new Intl.NumberFormat('en',{maximumSignificantDigits:5});
@@ -21,6 +21,7 @@ function clearFigure(){state.plotId++;pendingPlot=null;$('cancel-plot').hidden=t
 const runLabel={immune_coarse:'Coarse immune',immune_fine:'Fine immune',nonimmune:'Non-immune'};
 
 function brief(d){
+ if(d.run_key==='manuscript_ptm_20261004')return d.description;
  if(d.kind==='signatures')return 'Gene sets used to score biological programmes within cell types.';
  if(d.kind==='pca_original')return 'Original PCA figures for three deconvolution compartments.';
  if(d.kind==='diagnostics')return 'Sampling precision, chain agreement and predictive checks.';
@@ -28,6 +29,7 @@ function brief(d){
  return explain(d);
 }
 function explain(d){
+ if(d.run_key==='manuscript_ptm_20261004')return d.description;
  if(d.kind==='signatures')return 'A signature is a named group of genes representing a biological process. Browse its member genes and compare the number of genes across signatures within a cell type.';
  if(d.kind==='pca_original')return 'Principal component analysis (PCA) places similar expression profiles near one another. Choose a compartment to inspect separation among its cell types.';
  if(d.kind==='effects')return 'The estimate describes the direction and size of the BMI association. The 95% highest-density interval (HDI) describes posterior uncertainty. Read the measurement scale and BMI contrast before comparing effects; exclusion of zero alone does not control multiple testing.';
@@ -59,7 +61,7 @@ function syncRunControls(d){if(d?.section==='rna'&&d.run_key!=='overview'){const
 function availableCollections(section){return state.catalog.filter(d=>d.section===section).filter(d=>{if(state.mode==='advanced')return d.title.toLowerCase().includes($('collection-search').value.trim().toLowerCase());if(state.mode==='biology'&&d.kind!=='effects')return false;if(state.mode==='reliability'&&d.kind!=='diagnostics')return false;if(section==='rna'&&d.id!=='rna/compartment_diagnostics'){const run=($('bmi-model').value==='categorical'?'categorical_':'')+$('compartment').value;return d.run_key===run;}return true;});}
 function changeSection(section,preferred){
  fade($('results')); 
- if(['simulation','reference','signatures','single_cell'].includes(section)&&state.mode!=='advanced'){state.mode='advanced';updateModeUI();}
+ if(['manuscript','simulation','reference','signatures','single_cell'].includes(section)&&state.mode!=='advanced'){state.mode='advanced';updateModeUI();}
  state.section=section;for(const b of $('sections').children)b.setAttribute('aria-selected',b.dataset.section===section);
  $('rna-navigation').hidden=state.mode==='advanced'||section!=='rna';
  const choices=availableCollections(section);const defaultId=section==='reference'?'reference/pca_original':state.mode==='reliability'?(choices.find(d=>d.id==='rna/compartment_diagnostics')?.id||choices.find(d=>/run_diagnostics|fit_status|run_status/.test(d.id))?.id):choices.find(d=>d.kind==='effects')?.id;
@@ -69,7 +71,7 @@ function changeSection(section,preferred){
  loadDataset();
 }
 function updateModeUI(){for(const b of document.querySelectorAll('[data-mode]'))b.setAttribute('aria-selected',b.dataset.mode===state.mode);$('collection-search-label').hidden=state.mode!=='advanced';$('extra-options').open=state.mode==='advanced';$('mode-help').textContent=state.mode==='biology'?'Start with a data layer and compartment. Primary models are selected by default; sensitivity analyses remain under More options.':state.mode==='reliability'?'Inspect sampling quality and predictive checks. Failed fits remain visible here. Summary diagnostics do not replace chain traces.':'All '+state.catalog.length+' collections: effect estimates, diagnostics, simulations, reference data and sensitivity analyses.';}
-function setMode(mode){if(mode!=='advanced'&&['reference','signatures','single_cell','simulation'].includes(state.section))state.section='rna';state.mode=mode;$('collection-search').value='';syncRunControls(state.dataset);updateModeUI();changeSection(state.section,state.dataset?.id);}
+function setMode(mode){if(mode!=='advanced'&&['manuscript','reference','signatures','single_cell','simulation'].includes(state.section))state.section='rna';state.mode=mode;$('collection-search').value='';syncRunControls(state.dataset);updateModeUI();changeSection(state.section,state.dataset?.id);}
 async function loadDataset(){
  const version=++state.version;state.dataset=state.catalog.find(d=>d.id===$('dataset').value);if(!state.dataset)return;
  const d=state.dataset;$('pca-panel').hidden=true;$('signature-detail').hidden=true;document.querySelector('.filter-card').hidden=false;document.querySelector('.viewbar').hidden=false;$('table-panel').hidden=false;$('analysis-explanation').textContent=explain(d);$('download-json').hidden=d.kind!=='signatures';$('download-json').disabled=true;$('search').disabled=false;$('reset').disabled=false;state.rows=[];state.filtered=[];state.facets={};state.page=0;clearFigure();$('search').value='';$('include-failed').checked=false;$('download').disabled=true;$('facets').replaceChildren();$('extra-facets').replaceChildren();$('diagnostic-panel').hidden=true;$('draw').disabled=true;$('tbody').replaceChildren();$('thead').replaceChildren();
@@ -83,12 +85,12 @@ async function loadDataset(){
   if(version!==state.version)return;state.rows=rows;$('include-failed').checked=d.kind==='diagnostics';buildFacets();applyFilters();view(state.mode==='biology'&&plotTypes().length?'plot':'table');$('view-plot').hidden=!plotTypes().length;status('');
  }catch(e){if(version===state.version){status(e.message,true);$('result-count').textContent='';}}
 }
-const facetFields=['bmi_model','entity_level','variant','component','contrast','units','cell_type','assay','geometry','kind','rule','scenario','check','domain','parameter_family','compartment','analysis_set','PC','CellType','reference','resolution','scope','endpoint','cap','mode','layer','metric','comparison','family','stratum'];
+const facetFields=['template','quantity','numerical_pass','bmi_model','entity_level','variant','component','contrast','units','cell_type','assay','geometry','kind','rule','scenario','check','domain','parameter_family','compartment','analysis_set','PC','CellType','reference','resolution','scope','endpoint','cap','mode','layer','metric','comparison','family','stratum'];
 function buildFacets(preserve=false){
  const previous=preserve?{...state.facets}:{};state.facets={};
  $('facets').replaceChildren();$('extra-facets').replaceChildren();for(const key of facetFields){const eligible=state.rows.filter(r=>Object.entries(state.facets).every(([k,v])=>!v||String(r[k])===v));const values=[...new Set(eligible.map(r=>r[key]).filter(v=>v!==null&&v!==undefined&&v!==''))].sort();if(values.length<2||values.length>150)continue;
- const mandatory=(state.dataset.kind==='signatures'&&key==='cell_type')||(state.dataset.id==='rna/compartment_diagnostics'&&key==='bmi_model')||(state.dataset.section==='simulation'&&['kind','geometry','contrast','rule'].includes(key))||(state.dataset.kind==='purity'&&key==='compartment')||(state.dataset.kind==='scree'&&['compartment','analysis_set'].includes(key))||(state.dataset.kind==='contributions'&&['compartment','analysis_set','PC'].includes(key))||(state.dataset.kind==='annotation'&&['reference','resolution'].includes(key))||(state.dataset.kind==='effects'&&['entity_level','variant','component','contrast','units'].includes(key))||(state.dataset.kind==='diagnostics'&&['variant','check','domain'].includes(key))||(/celltype_mean_slopes|agreement_with_chance|concordance_95CI/.test(state.dataset.id)&&['metric','comparison','layer','scope','stratum'].includes(key));
- let initial=previous[key]&&values.map(String).includes(previous[key])?previous[key]:mandatory?(values.includes('continuous')?'continuous':values.includes('primary')?'primary':values.includes('feature')?'feature':values[0]):'';
+ const mandatory=!(state.dataset.id==='ptm/extended_sensitivity_effects'&&key==='variant')&&((state.dataset.id==='manuscript/ptm_calibration_templates'&&key==='template')||(state.dataset.id==='manuscript/sensitivity_comparisons'&&key==='comparison')||(state.dataset.kind==='signatures'&&key==='cell_type')||(state.dataset.id==='rna/compartment_diagnostics'&&key==='bmi_model')||(state.dataset.section==='simulation'&&['kind','geometry','contrast','rule'].includes(key))||(state.dataset.kind==='purity'&&key==='compartment')||(state.dataset.kind==='scree'&&['compartment','analysis_set'].includes(key))||(state.dataset.kind==='contributions'&&['compartment','analysis_set','PC'].includes(key))||(state.dataset.kind==='annotation'&&['reference','resolution'].includes(key))||(state.dataset.kind==='effects'&&['entity_level','variant','component','contrast','units'].includes(key))||(state.dataset.kind==='diagnostics'&&['variant','check','domain'].includes(key))||(/celltype_mean_slopes|agreement_with_chance|concordance_95CI/.test(state.dataset.id)&&['metric','comparison','layer','scope','stratum'].includes(key)));
+ let initial=previous[key]&&values.map(String).includes(previous[key])?previous[key]:mandatory?(key==='component'&&values.includes('PTM_given_Protein')?'PTM_given_Protein':values.includes('continuous')?'continuous':values.includes('primary')?'primary':values.includes('feature')?'feature':values[0]):'';
  const fieldNames={variant:'Analysis version',component:'Quantity to compare',cell_type:'Cell type',entity_level:'Feature level',contrast:'BMI contrast',units:'Measurement scale',assay:'Assay'};const label=el('label',fieldNames[key]||human(key));const select=el('select',undefined,{'aria-label':fieldNames[key]||human(key)});options(select,[...(!mandatory?[['','All']]:[]),...values.map(v=>[String(v),human(v)])],String(initial));state.facets[key]=String(initial);select.dataset.key=key;select.onchange=()=>{state.facets[key]=select.value;state.page=0;buildFacets(true);applyFilters();};label.append(select);const extra=state.mode!=='advanced'&&['variant','entity_level','units','parameter_family'].includes(key);$(extra?'extra-facets':'facets').append(label);
  }
  $('include-failed').closest('label').hidden=state.dataset.kind==='diagnostics'||!state.rows.some(r=>r.numerical_checks_pass!==undefined);$('extra-options').hidden=!$('extra-facets').children.length;
@@ -106,6 +108,14 @@ function drawTable(){
 }
 function plotTypes(){
  const d=state.dataset;if(!d)return [];
+ if(/ptm_heatmap_lookup|phospho_labels|glyco_labels/.test(d.id))return [['ptm_primary','PTM heatmap'],['ptm_colourbar','Shared colour scale']];
+ if(/rna_heatmap_values|rna_protein_heatmap_values/.test(d.id))return [['manuscript_heatmap','Heatmap']];
+ if(/ptm_calibration_summary|ptm_calibration_templates/.test(d.id))return [['calibration_coverage','Interval coverage'],['calibration_bias','Bias'],['calibration_rmse','RMSE']];
+ if(d.id==='manuscript/sensitivity_comparisons')return [['sensitivity_comparison','Matched effect intervals']];
+ if(d.id==='manuscript/sensitivity_classifications')return [['sensitivity_classification','Interval classifications']];
+ if(d.id==='manuscript/ptm_sbc_bins')return [['sbc_ranks','SBC rank histograms']];
+ if(d.id==='manuscript/ptm_calibration_completion')return [['calibration_completion','Calibration sample counts']];
+ if(d.id==='ptm/extended_sensitivity_effects')return [['sensitivity_grid','Sensitivity heatmap'],['forest','Effect intervals'],['heatmap','Heatmap']];
  if(d.kind==='effects')return [['forest','Effect intervals'],['heatmap','Heatmap']];
  if(d.kind==='signatures')return [['signatures','Genes per signature']];
  if(d.kind==='coverage')return [['coverage','Feature coverage']];
@@ -127,7 +137,7 @@ let busy=false,activePlotId=null,pendingPlot=null;
 function dispatchPlot(job){busy=true;activePlotId=job.id;state.worker.postMessage(job);}
 function startWorker(){
  if(state.worker)return;
- state.worker=new Worker('./plot-worker.js?v=research-2',{type:'module'});
+ state.worker=new Worker('./plot-worker.js?v=manuscript-python-1',{type:'module'});
  state.worker.onmessage=({data})=>{
   if(data.status){if(data.id===state.plotId)status(data.status);return;}
   if(data.id===activePlotId){busy=false;activePlotId=null;}
@@ -143,10 +153,11 @@ function startWorker(){
 function drawPlot(){
  if(!plotTypes().length||!state.filtered.length)return;
  const id=++state.plotId;startWorker();$('draw').disabled=true;$('cancel-plot').hidden=false;
- const job={id,request:{rows:state.filtered.map(r=>r.feature&&PROGRAMME_LABELS[r.feature]?{...r,label:programmeLabel(r)}:r),type:$('plot-type').value,y:$('plot-y').value,limit:Number($('plot-limit').value),title:state.dataset.title}};
+ const job={id,request:{scale_rows:state.dataset.id==='manuscript/ptm_heatmap_lookup'?state.rows:undefined,rows:state.filtered.map(r=>r.feature&&PROGRAMME_LABELS[r.feature]?{...r,label:programmeLabel(r)}:r),type:$('plot-type').value,y:$('plot-y').value,limit:Number($('plot-limit').value),title:state.dataset.title}};
  if(busy){pendingPlot=job;status('Figure queued. You can continue browsing or return Home.');}else{status('Preparing the figure. Navigation remains available.');dispatchPlot(job);}
 }
 $('cancel-plot').onclick=()=>{clearFigure();$('draw').disabled=!state.filtered.length;status('Figure discarded. The plotting engine remains loaded.');};
+$('manuscript-shortcut').onclick=()=>{state.mode='advanced';$('collection-search').value='';updateModeUI();changeSection('manuscript','manuscript/ptm_heatmap_lookup');};
 function showPCA(){
  state.rows=[];state.filtered=[];clearFigure();$('pca-panel').hidden=false;$('diagnostic-panel').hidden=true;document.querySelector('.filter-card').hidden=true;document.querySelector('.viewbar').hidden=true;$('table-panel').hidden=true;$('plot-panel').hidden=true;$('download').disabled=true;status('');history.replaceState(null,'','#dataset=reference%2Fpca_original&mode=advanced');loadPCAImage();
 }

@@ -8,7 +8,7 @@ async function initialize(id){
   await py.loadPackage(['numpy','pandas','matplotlib','micropip']);
   py.globals.set("seaborn_wheel_url",runtimeURL+"seaborn-0.13.2-py3-none-any.whl");
   await py.runPythonAsync("import micropip\nawait micropip.install(seaborn_wheel_url, deps=False)");
-  const response=await fetch('./plotting.py');if(!response.ok)throw Error('Plotting code could not be loaded.');
+  const response=await fetch('./plotting.py?v=manuscript-python-1');if(!response.ok)throw Error('Plotting code could not be loaded.');
   await py.runPythonAsync(await response.text());
   return py;
 }
