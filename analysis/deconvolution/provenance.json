@@ -1,0 +1,141 @@
+{
+  "source_name": "BayesPrism_initial_issue_verification_all_compartments.ipynb",
+  "source_sha256": "36b6a260afea0195e8d64c5da782b342983a14855aaf08f0b6f88a49d87c3145",
+  "source_modified_utc": "2026-09-06T01:31:31.527Z",
+  "source_drive_id": "15gC3X-Hxg_lIn8c7agfbwqUgtDVtqxcs",
+  "validation": "Every retained code cell has identical Python AST. Outputs and conversational markdown/comments were removed. No model or deconvolution rerun.",
+  "output_evidence": {
+    "pca_run": "20260906T013040524557Z",
+    "endpoint": "within_component_logcpm_z_cap5",
+    "weighting": "equal squared weight per within-cell-type correlation cluster and per cell type",
+    "report_drive_id": "1snEzSlVqyADfRbmzZ-62Vse_jDn5orqP"
+  },
+  "cells": [
+    {
+      "original_cell": 2,
+      "curated_code_cell": 0,
+      "ast_equal": true,
+      "source_sha256": "8a56ce48457425ea2dbdf677d5dc17977df762a035ad7696cbeb4d6ec4b76f1e",
+      "curated_sha256": "8a56ce48457425ea2dbdf677d5dc17977df762a035ad7696cbeb4d6ec4b76f1e"
+    },
+    {
+      "original_cell": 4,
+      "curated_code_cell": 1,
+      "ast_equal": true,
+      "source_sha256": "1ab48a55af486312d81e7650b92a275728e488ffec085e79ff2f945f87e65247",
+      "curated_sha256": "4d8a89342492fbaafded9500b00247e9a03e4d7dafe39c1fceae11e62346c0c7"
+    },
+    {
+      "original_cell": 5,
+      "curated_code_cell": 2,
+      "ast_equal": true,
+      "source_sha256": "d057b72a6ab463e32b2d37e9eaa10aed119640a1f757d1fa7684ebfbdb03ad64",
+      "curated_sha256": "d057b72a6ab463e32b2d37e9eaa10aed119640a1f757d1fa7684ebfbdb03ad64"
+    },
+    {
+      "original_cell": 7,
+      "curated_code_cell": 3,
+      "ast_equal": true,
+      "source_sha256": "1096e8b11d967d2bc4aa9144b380e66220ed6e76ef422b55066bb49d2106c53b",
+      "curated_sha256": "1096e8b11d967d2bc4aa9144b380e66220ed6e76ef422b55066bb49d2106c53b"
+    },
+    {
+      "original_cell": 9,
+      "curated_code_cell": 4,
+      "ast_equal": true,
+      "source_sha256": "bfdf1d4613ce8e9c43905649146ce3f36f498390fc71e2ef40475aacf1e4fbd1",
+      "curated_sha256": "bfdf1d4613ce8e9c43905649146ce3f36f498390fc71e2ef40475aacf1e4fbd1"
+    },
+    {
+      "original_cell": 11,
+      "curated_code_cell": 5,
+      "ast_equal": true,
+      "source_sha256": "e2bbca22f3daf2f196898e08d792394f6c51bb000e7f7dcfba0b83a511c4eb00",
+      "curated_sha256": "e2bbca22f3daf2f196898e08d792394f6c51bb000e7f7dcfba0b83a511c4eb00"
+    },
+    {
+      "original_cell": 13,
+      "curated_code_cell": 6,
+      "ast_equal": true,
+      "source_sha256": "93f213c1142343335e0265e5bc53544a63634cf607e6debdc582ae37a91b2d11",
+      "curated_sha256": "93f213c1142343335e0265e5bc53544a63634cf607e6debdc582ae37a91b2d11"
+    },
+    {
+      "original_cell": 15,
+      "curated_code_cell": 7,
+      "ast_equal": true,
+      "source_sha256": "12962fbf9d2cc794d3a22beeb042f8ec95c0921f874564603421de721800e618",
+      "curated_sha256": "12962fbf9d2cc794d3a22beeb042f8ec95c0921f874564603421de721800e618"
+    },
+    {
+      "original_cell": 17,
+      "curated_code_cell": 8,
+      "ast_equal": true,
+      "source_sha256": "add63517a6ec97ba803c57a07331fbcc8b6aafda38461671bdf7bbe0e64f8463",
+      "curated_sha256": "add63517a6ec97ba803c57a07331fbcc8b6aafda38461671bdf7bbe0e64f8463"
+    },
+    {
+      "original_cell": 19,
+      "curated_code_cell": 9,
+      "ast_equal": true,
+      "source_sha256": "9773cdc9cf585cebde6324ba03eacdd46d48c1b795ba7ccca8671055cc896b27",
+      "curated_sha256": "bfc53bf9d1dc3ff4d1573a96ce05c3a8186bb88780e65b4dfd84ca0b0f4b8aec"
+    },
+    {
+      "original_cell": 21,
+      "curated_code_cell": 10,
+      "ast_equal": true,
+      "source_sha256": "e0c0e8427891c26771c4f7ba385c270d89f98fea55238bbc3d7e0361834c6864",
+      "curated_sha256": "e0c0e8427891c26771c4f7ba385c270d89f98fea55238bbc3d7e0361834c6864"
+    },
+    {
+      "original_cell": 23,
+      "curated_code_cell": 11,
+      "ast_equal": true,
+      "source_sha256": "74668edc17fd3af1212e7119c9660d1bce39dbaa32150f7f85775beda08b9729",
+      "curated_sha256": "74668edc17fd3af1212e7119c9660d1bce39dbaa32150f7f85775beda08b9729"
+    },
+    {
+      "original_cell": 24,
+      "curated_code_cell": 12,
+      "ast_equal": true,
+      "source_sha256": "4de1c986f70cd00960ec59512b2262827dd769b3d7244a56b837499036e34432",
+      "curated_sha256": "4de1c986f70cd00960ec59512b2262827dd769b3d7244a56b837499036e34432"
+    },
+    {
+      "original_cell": 26,
+      "curated_code_cell": 13,
+      "ast_equal": true,
+      "source_sha256": "1a09cdcf5331dea1553251ebbb82aad9c24a02981fcd95400029d9f6da965d0d",
+      "curated_sha256": "1a09cdcf5331dea1553251ebbb82aad9c24a02981fcd95400029d9f6da965d0d"
+    },
+    {
+      "original_cell": 28,
+      "curated_code_cell": 14,
+      "ast_equal": true,
+      "source_sha256": "c3e5588d1d2a3f38f12f55218e7ad5a31dd4725ac47c5230fdb8b39e31e6fdde",
+      "curated_sha256": "c3e5588d1d2a3f38f12f55218e7ad5a31dd4725ac47c5230fdb8b39e31e6fdde"
+    },
+    {
+      "original_cell": 30,
+      "curated_code_cell": 15,
+      "ast_equal": true,
+      "source_sha256": "d6b444661f2080e19536bb28d6cf8248f7030f3adbf7a396b4298fefa8606d24",
+      "curated_sha256": "d6b444661f2080e19536bb28d6cf8248f7030f3adbf7a396b4298fefa8606d24"
+    },
+    {
+      "original_cell": 32,
+      "curated_code_cell": 16,
+      "ast_equal": true,
+      "source_sha256": "26ae93146f32e7efd7582f8162c0190386581c07bf6d52f4c6a4c7b770c41d45",
+      "curated_sha256": "285be7445389fe0f6fdff918c7b650fba3e8859738d2d52cf593cf65d334a930"
+    },
+    {
+      "original_cell": 33,
+      "curated_code_cell": 17,
+      "ast_equal": true,
+      "source_sha256": "039c3797ddf322e93dea3b3f635ea1679288a038a59d508b4144c3c8b7a24e6f",
+      "curated_sha256": "024d591f83356b44d2c23678a7da647468c3f7e2f67a4151685fb7c21ef949cc"
+    }
+  ]
+}

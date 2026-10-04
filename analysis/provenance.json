@@ -1,0 +1,172 @@
+{
+  "code_files": [
+    {
+      "path": "analysis/deconvolution/compartment_qc_and_pca.ipynb",
+      "sha256": "f31aab41dc4ce64317e8482f1b84f69700c555cff307d1599b64e46535e6bd5f"
+    },
+    {
+      "path": "analysis/paired/protein_ptm_paired.ipynb",
+      "sha256": "9d83bef00d09efe8760b0313e68f8cd919b9cee27917a3219dac0cdd06136177"
+    },
+    {
+      "path": "analysis/paired/ptm_screen_analysis.ipynb",
+      "sha256": "9ad9c0dbc756b374e74580c3c868f9b4d24b9ab5d3fbdf9a88ee828db5e426c9"
+    },
+    {
+      "path": "analysis/paired/rna_protein_paired.ipynb",
+      "sha256": "f3c754ce6f9a473c06cc07d67b7d266fab83f0c1e7bfc71090366d444405de9f"
+    },
+    {
+      "path": "analysis/ptm_extension/ptm_core.py",
+      "sha256": "d96a66183d762d0b49d71e2c9f30e35343cef36d89629781e9fbff09b20a4193"
+    },
+    {
+      "path": "analysis/ptm_extension/run.py",
+      "sha256": "77d6b8a15bbfb8cf8cf0c6bfe58ab943300492d06b65477fe507481e41ea8151"
+    },
+    {
+      "path": "analysis/ptm_extension/run_common.py",
+      "sha256": "7641f79bb637bf59e5e3f4d5f193050c23f6d2f08c5f7f13b74ff213db350ba9"
+    },
+    {
+      "path": "analysis/ptm_extension/run_ptm.py",
+      "sha256": "1d09bf01f208b6b13acaab6dfc02936650ab4befdd0529e451693c395a351449"
+    },
+    {
+      "path": "analysis/rna/categorical_bmi.ipynb",
+      "sha256": "619694cd236d54603c88aac9d0aec1cf06da237dd521faf31e65997e9c7dede1"
+    },
+    {
+      "path": "analysis/rna/continuous_celltype_nu.ipynb",
+      "sha256": "42804d662740fc921fe3ab56e9e968ad0314c8d9e232da8607a5b7b98b62568a"
+    },
+    {
+      "path": "analysis/rna/continuous_global_nu.ipynb",
+      "sha256": "084bf9df5548c8b1ceae0ab2abb3438ca8481b16bd95ecff0c7934f24bf8d621"
+    },
+    {
+      "path": "analysis/rna/low_read_sensitivity.ipynb",
+      "sha256": "1c9ebdc2e09c16b7ea3f571357da79088c90f3ac88da6ea05cd58cea9725f68f"
+    },
+    {
+      "path": "analysis/rna_extension/bhm_extension.py",
+      "sha256": "e0fb433b32c94c80784924c95538af3e036ee3319969780bed07f1cf5bb7fedd"
+    },
+    {
+      "path": "analysis/rna_extension/orthoprec.py",
+      "sha256": "ddcf49f659e38bd5d11c24e6f695b25889bad55977acf6552d50ef865a50d5c5"
+    },
+    {
+      "path": "analysis/rna_extension/read_dependent_scale.ipynb",
+      "sha256": "0b9b0c07ac9939a7f4f1485e4828da5e7a1c5fd37b787b454228e6a4612ad0ed"
+    }
+  ],
+  "independent_source_comparisons": [
+    {
+      "file": "analysis/paired/rna_protein_paired.ipynb",
+      "source_sha256": "e215370464e7bf1f095ea0a7073bbf731bf2e476c213d7c9d35315cfeebb3ed8",
+      "retained_code_cells": 43,
+      "ast_comparison": "identical",
+      "curated_sha256": "f3c754ce6f9a473c06cc07d67b7d266fab83f0c1e7bfc71090366d444405de9f"
+    },
+    {
+      "file": "analysis/paired/protein_ptm_paired.ipynb",
+      "source_sha256": "2d0fb8eff747725e5814f5d411ec1f0632356cfd204a64c25b2a2dbd7fffd415",
+      "retained_code_cells": 20,
+      "ast_comparison": "identical",
+      "curated_sha256": "9d83bef00d09efe8760b0313e68f8cd919b9cee27917a3219dac0cdd06136177"
+    },
+    {
+      "file": "analysis/paired/ptm_screen_analysis.ipynb",
+      "source_sha256": "efc8b9cc47d095c91018bc23286e10b79ae0496607eb3715906e75bdc69375b6",
+      "retained_code_cells": 9,
+      "ast_comparison": "identical",
+      "curated_sha256": "9ad9c0dbc756b374e74580c3c868f9b4d24b9ab5d3fbdf9a88ee828db5e426c9"
+    },
+    {
+      "file": "analysis/rna/continuous_celltype_nu.ipynb",
+      "source_sha256": "76e84feb87908426663a10ad373d8221cd934c4a346e44087a876008951fe977",
+      "retained_code_cells": 12,
+      "ast_comparison": "identical except updated release hash",
+      "embedded_release_hash_verified": true,
+      "curated_sha256": "42804d662740fc921fe3ab56e9e968ad0314c8d9e232da8607a5b7b98b62568a"
+    },
+    {
+      "file": "analysis/rna/continuous_global_nu.ipynb",
+      "source_sha256": "2502d9e981675a77b913fecce305c2c7ddea77d22bee9cb40cd4f669bd16060d",
+      "retained_code_cells": 10,
+      "ast_comparison": "identical except updated release hash",
+      "embedded_release_hash_verified": true,
+      "curated_sha256": "084bf9df5548c8b1ceae0ab2abb3438ca8481b16bd95ecff0c7934f24bf8d621"
+    },
+    {
+      "file": "analysis/rna/categorical_bmi.ipynb",
+      "source_sha256": "377ae89838825419ee2cb2e8f9319746b7dbb843741cc8b55fc8f99923637c5a",
+      "retained_code_cells": 12,
+      "ast_comparison": "identical except updated release hash",
+      "embedded_release_hash_verified": true,
+      "curated_sha256": "619694cd236d54603c88aac9d0aec1cf06da237dd521faf31e65997e9c7dede1"
+    },
+    {
+      "file": "analysis/rna/low_read_sensitivity.ipynb",
+      "source_sha256": "88f8a5038cb959fad80c5ddf2508a89113ffc85f586bfbff6fe8bf7413238cfd",
+      "retained_code_cells": 4,
+      "ast_comparison": "identical",
+      "embedded_release_hash_verified": false,
+      "curated_sha256": "1c9ebdc2e09c16b7ea3f571357da79088c90f3ac88da6ea05cd58cea9725f68f"
+    },
+    {
+      "file": "analysis/deconvolution/compartment_qc_and_pca.ipynb",
+      "source_sha256": "36b6a260afea0195e8d64c5da782b342983a14855aaf08f0b6f88a49d87c3145",
+      "retained_code_cells": 18,
+      "ast_comparison": "identical",
+      "curated_sha256": "f31aab41dc4ce64317e8482f1b84f69700c555cff307d1599b64e46535e6bd5f"
+    },
+    {
+      "file": "analysis/rna_extension/bhm_extension.py",
+      "source_sha256": "617dc3f0c053fd05f06342fcb8bad7bf68db1ed3945c47780397da35c38e5130",
+      "ast_comparison": "identical except module docstring or engine hash",
+      "curated_sha256": "e0fb433b32c94c80784924c95538af3e036ee3319969780bed07f1cf5bb7fedd"
+    },
+    {
+      "file": "analysis/rna_extension/orthoprec.py",
+      "source_sha256": "4e5f79e6b9ba62ea01c7de55c8b73e97c60782ad1e5e996ba60d3a5037a09e1a",
+      "ast_comparison": "identical except module docstring or engine hash",
+      "curated_sha256": "ddcf49f659e38bd5d11c24e6f695b25889bad55977acf6552d50ef865a50d5c5"
+    }
+  ],
+  "paired_fingerprints": {
+    "rna": {
+      "initialization_fingerprint": "3337ca9e6039b76d7a6007887ac5e85d92ab4daf8aeb1a42afa9429112eb1354",
+      "curated_initialization_fingerprint": "3337ca9e6039b76d7a6007887ac5e85d92ab4daf8aeb1a42afa9429112eb1354",
+      "function_count": 32,
+      "source_fingerprint": "8ae311a4b30a3cdf933d73ab9066616104825d1474863d3647a7d1dc80132562",
+      "curated_fingerprint": "8ae311a4b30a3cdf933d73ab9066616104825d1474863d3647a7d1dc80132562",
+      "identical": true
+    },
+    "ptm": {
+      "initialization_fingerprint": null,
+      "curated_initialization_fingerprint": null,
+      "function_count": 27,
+      "source_fingerprint": "ee0a1e289aae6e0f2611b3393f0b52cd484a090e390f2a43be55f1709ede08f2",
+      "curated_fingerprint": "ee0a1e289aae6e0f2611b3393f0b52cd484a090e390f2a43be55f1709ede08f2",
+      "identical": true,
+      "embedded_legacy_comments": [
+        "# Current source has identical patient batch partitions across assays, even when names differ.",
+        "# start clean workers instead of forking the kernel",
+        "# Ignore cell filenames and line numbers so re-executing a cell does not change its identity.",
+        "# Expanded label table is annotation, not independent observations or a discovery count."
+      ],
+      "legacy_source_fingerprint": "62ad59d141a90b67202a5f2aef6921425a585d1644f94837632cb661845946f6",
+      "legacy_curated_fingerprint": "62ad59d141a90b67202a5f2aef6921425a585d1644f94837632cb661845946f6"
+    }
+  },
+  "ptm_extension": {
+    "archived_run": "ee305d82dbea549b",
+    "archived_source_bundle_sha256": "27f2be662bdb2adeb49dae18c317274ba6aa92ee21d8c88a7818e54e836c1b8e",
+    "sensitivity_contracts_verified": 192,
+    "calibration_contracts_verified": 250,
+    "all_frozen_settings_match": true
+  },
+  "validation_scope": "Source comparison, historical contract/fingerprint checks, release checksum verification, notebook schemas, code syntax, cleared outputs and local documentation links. Model sampling was not rerun."
+}

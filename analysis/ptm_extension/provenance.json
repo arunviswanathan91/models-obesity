@@ -1,0 +1,39 @@
+{
+  "run_id": "ee305d82dbea549b",
+  "files": [
+    {
+      "path": "ptm_core.py",
+      "source_sha256": "256ef5d43b4541a861469864901cc9825792a2afb312fea4af1b7cf2b74e64ad",
+      "curated_sha256": "d96a66183d762d0b49d71e2c9f30e35343cef36d89629781e9fbff09b20a4193",
+      "ast_equivalent": false,
+      "normalized_ast_equivalent": true,
+      "changes": [
+        "Neutralized missing-archive error message; no computation changed."
+      ]
+    },
+    {
+      "path": "run_common.py",
+      "source_sha256": "7641f79bb637bf59e5e3f4d5f193050c23f6d2f08c5f7f13b74ff213db350ba9",
+      "curated_sha256": "7641f79bb637bf59e5e3f4d5f193050c23f6d2f08c5f7f13b74ff213db350ba9",
+      "ast_equivalent": true,
+      "normalized_ast_equivalent": true,
+      "changes": []
+    },
+    {
+      "path": "run_ptm.py",
+      "source_sha256": "663915fb29e81be564231a87c9481a2d8d06668959e3a3a37b8614d4b3b35ac2",
+      "curated_sha256": "1d09bf01f208b6b13acaab6dfc02936650ab4befdd0529e451693c395a351449",
+      "ast_equivalent": true,
+      "normalized_ast_equivalent": true,
+      "changes": [
+        "Removed imperative testing instruction from chain/draw comment."
+      ]
+    }
+  ],
+  "archived_source_bundle_sha256": "27f2be662bdb2adeb49dae18c317274ba6aa92ee21d8c88a7818e54e836c1b8e",
+  "source_bundle_verified": true,
+  "completed_sensitivity_fits": 192,
+  "completed_calibration_datasets": 250,
+  "source": "Source modules and configuration embedded in the final ee305d82dbea549b analysis report archive; validated against saved fit contracts.",
+  "runner": "New path-configurable CLI; invokes unchanged sensitivity/calibration routines sequentially with frozen settings and a separate source fingerprint."
+}
