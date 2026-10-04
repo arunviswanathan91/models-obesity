@@ -5,6 +5,14 @@
       "sha256": "f31aab41dc4ce64317e8482f1b84f69700c555cff307d1599b64e46535e6bd5f"
     },
     {
+      "path": "analysis/deconvolution/immune_reference_deconvolution.ipynb",
+      "sha256": "2f01f0ee7fe448d5de401242221646df8df8f48fd57cbb9a2fb68736431f7193"
+    },
+    {
+      "path": "analysis/deconvolution/nonimmune_reference_deconvolution.ipynb",
+      "sha256": "03a437694f611f6ac885b618abcbf97db1d311438b9d8b01d19ae898f2083cdc"
+    },
+    {
       "path": "analysis/paired/protein_ptm_paired.ipynb",
       "sha256": "9d83bef00d09efe8760b0313e68f8cd919b9cee27917a3219dac0cdd06136177"
     },
@@ -59,6 +67,10 @@
     {
       "path": "analysis/rna_extension/read_dependent_scale.ipynb",
       "sha256": "0b9b0c07ac9939a7f4f1485e4828da5e7a1c5fd37b787b454228e6a4612ad0ed"
+    },
+    {
+      "path": "analysis/signatures/curate_signatures.py",
+      "sha256": "98fb9f40611193df7e83e53aa6e43720d38a03d3ffa24399c6976fefd38f0e3f"
     }
   ],
   "independent_source_comparisons": [
@@ -168,5 +180,24 @@
     "calibration_contracts_verified": 250,
     "all_frozen_settings_match": true
   },
-  "validation_scope": "Source comparison, historical contract/fingerprint checks, release checksum verification, notebook schemas, code syntax, cleared outputs and local documentation links. Model sampling was not rerun."
+  "validation_scope": "Source comparison, historical contract/fingerprint checks, release checksum verification, notebook schemas, Python and Colab-wrapper syntax, cleared outputs and local documentation links. Upstream R code compared excluding comments; no R parsing or execution. Model fits and live LLM calls were not rerun.",
+  "upstream_deconvolution": {
+    "source_commit": "fe14ec848bfeac469528dc87c5aea8aacb14a87c",
+    "detailed_provenance": "analysis/deconvolution/upstream_provenance.json",
+    "independently_compared_source_cells": 84,
+    "scientific_noncomment_tokens_identical": true,
+    "notebook_schema_and_colab_wrapper_syntax": true,
+    "r_payloads_parsed_or_executed": false
+  },
+  "signature_curation": {
+    "detailed_provenance": "analysis/signatures/provenance.json",
+    "original_source_git_blob_verified": true,
+    "unchanged_curation_and_prompt_functions": 8,
+    "sdk_repairs": [
+      "API key configuration",
+      "temperature inside generation_config"
+    ],
+    "offline_tests_passed": 3,
+    "live_model_requests": 0
+  }
 }

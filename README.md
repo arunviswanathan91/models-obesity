@@ -14,6 +14,9 @@ Each entry links to a retained analysis workflow. Configure notebook input paths
 
 | Analysis | Code | Role |
 | --- | --- | --- |
+| Immune reference and BayesPrism deconvolution | [Notebook](analysis/deconvolution/immune_reference_deconvolution.ipynb) · [Instructions](analysis/deconvolution/README.md) | CD45+ reference preparation and coarse/fine immune deconvolution. |
+| Nonimmune reference and BayesPrism deconvolution | [Notebook](analysis/deconvolution/nonimmune_reference_deconvolution.ipynb) · [Instructions](analysis/deconvolution/README.md) | Stromal/epithelial reference preparation and nonimmune deconvolution. |
+| LLM-assisted signature curation | [Script](analysis/signatures/curate_signatures.py) · [Instructions](analysis/signatures/README.md) | Interactive redundancy review and proposed additions, with human approval. |
 | Compartment QC and weighted PCA | [Notebook](analysis/deconvolution/compartment_qc_and_pca.ipynb) · [Instructions](analysis/deconvolution/README.md) | Audits completed BayesPrism outputs and constructs tiered and strict-QC PCA summaries. |
 | Continuous BMI with low-read exclusion | [Notebook](analysis/rna/low_read_sensitivity.ipynb) | Primary RNA analyses; select each of the three compartments. |
 | Continuous BMI, cell-type-specific tail parameter | [Notebook](analysis/rna/continuous_celltype_nu.ipynb) | All-profile coarse-immune comparison. |
@@ -52,9 +55,9 @@ Intervals and support indicators must be interpreted using each analysis's state
 
 ## Source verification
 
-[Source fingerprints and validation](analysis/provenance.json) record the retained code and independent comparisons. The published RNA–protein initialization fingerprint was reproduced under Python 3.13.15. PTM extension settings and source provenance were checked against all 192 sensitivity and 250 calibration contracts. Notebook structure, syntax, cleared outputs and local documentation links were checked. These are source-level checks; the model fits were not rerun.
+[Source fingerprints and validation](analysis/provenance.json) record the retained code and independent comparisons. The published RNA–protein initialization fingerprint was reproduced under Python 3.13.15. PTM extension settings and source provenance were checked against all 192 sensitivity and 250 calibration contracts. Notebook structure, Python/Colab-wrapper syntax, cleared outputs and local documentation links were checked. These are source-level checks; the model fits were not rerun. The added BayesPrism R code was compared against the pinned source without R execution. Three offline signature-curation tests verify SDK configuration, overlap filtering and human-decision behaviour.
 
-The indexed workflows begin from the stated frozen inputs. Upstream single-cell reference construction/deconvolution and the RNA simulation fitting source are not included in this code release.
+The BayesPrism reference/deconvolution and interactive signature-curation workflows are adapted from the study's [obese-model repository](https://github.com/arunviswanathan91/obese-model). Their source revisions and edits are recorded alongside the code; the imported source retains its [MIT notice](licenses/obese-model-MIT.txt). The signature-curation workflow does not deterministically reconstruct the frozen manuscript catalogue. The RNA simulation fitting source remains outside this code release.
 
 ## Atlas implementation
 

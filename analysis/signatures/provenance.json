@@ -1,0 +1,31 @@
+{
+  "source_repository": "arunviswanathan91/obese-model",
+  "source_commit": "fe14ec848bfeac469528dc87c5aea8aacb14a87c",
+  "source_path": "03_LLM_signature_curation_with/Signature Curation with LLM.py",
+  "source_git_blob": "41d0ddd5ef8ebc654ded5b774802a18f74b411d0",
+  "source_sha256": "07ad280fa995441ab75f4261e0b6d74ab4f6e7144dac3652af61aefb81c95ff3",
+  "curated_sha256": "98fb9f40611193df7e83e53aa6e43720d38a03d3ffa24399c6976fefd38f0e3f",
+  "unchanged_functions": [
+    "clean_json_response",
+    "overlap_coefficient",
+    "print_gene_breakdown",
+    "get_manual_dedup_choice",
+    "ask_gemini_deduplication",
+    "suggest_missing_signatures",
+    "run_deduplication",
+    "run_discovery"
+  ],
+  "changes": [
+    "Removed decorative comments and corrected the introductory description.",
+    "Configured the existing Gemini SDK using GEMINI_API_KEY.",
+    "Moved temperature into the existing generation_config dictionary when calling generate_content.",
+    "Added optional environment overrides for input, output and log paths; original defaults retained."
+  ],
+  "preserved": [
+    "LLM prompts",
+    "Model name and intended temperature",
+    "Overlap thresholds and candidate selection",
+    "Human acceptance decisions and signature mutations"
+  ],
+  "catalogue_provenance": "This is the repository-hosted interactive curation workflow. No execution log binding its output to the frozen manuscript catalogue was available; it is not a deterministic catalogue reconstruction."
+}
