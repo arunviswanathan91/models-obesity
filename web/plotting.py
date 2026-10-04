@@ -173,12 +173,12 @@ def _manuscript_plot(df,req,kind):
                     rows.append(dict(signature_label=label,celltype_label=col,value=r['posterior_mean_'+suffix],hdi_95_excludes_zero=r['hdi_95_lower_'+suffix]>0 or r['hdi_95_upper_'+suffix]<0))
             draw_heatmap(pd.DataFrame(rows),labels,['Marginal PTM','Protein-conditioned PTM'],{},{},vmax,'browser','extended','Supported BMI effects','value')
             fig=_CAPTURED;fig.axes[0].set_xlabel('BMI association',fontsize=HM_LABEL,fontweight='bold');fig.axes[0].set_ylabel('PTM feature',fontsize=HM_LABEL,fontweight='bold')
-        return fig, f'Original heatmap code; {len(df)} selected features. Shared symmetric colour scale ±{vmax:.3g}. White circles: pointwise 95% HDI excludes zero. No panel-wide multiplicity correction. Full identities remain in the table.'
+        return fig, f'Colour indicates the posterior mean BMI effect (response SD per 5 kg/m²), on a symmetric scale from −{vmax:.3g} to +{vmax:.3g}. White circles indicate pointwise 95% HDIs excluding zero.'
     if kind=='manuscript_heatmap':
         if df.duplicated(['signature_label','celltype_label']).any():raise ValueError('Duplicate heatmap cells; narrow the selection.')
         rows=list(dict.fromkeys(df.signature_label));cols=list(dict.fromkeys(df.celltype_label));vmax=max(float(df.value.abs().max()),1e-8)
         draw_heatmap(df,rows,cols,{},{},vmax,'browser','extended','','value');fig=_CAPTURED
-        return fig,f'Original study heatmap code. {len(rows)} rows; colour scale ±{vmax:.3g}. White circles indicate pointwise 95% HDIs excluding zero; missing combinations remain blank.'
+        return fig,f'Colour indicates the posterior mean effect, on a symmetric scale from −{vmax:.3g} to +{vmax:.3g}. White circles indicate pointwise 95% HDIs excluding zero. Blank cells indicate unavailable estimates.'
     if kind=='sensitivity_grid':
         if df.quantity.nunique()!=1:raise ValueError('Select one model quantity.')
         identities=df[['key','gene','feature_id']].drop_duplicates().sort_values(['gene','feature_id']);order=identities.key.tolist();labels=feature_labels(identities)
@@ -200,7 +200,7 @@ def _manuscript_plot(df,req,kind):
         for i in range(1,len(identities)):
             if identities.gene.iloc[i]!=identities.gene.iloc[i-1]:ax.axhline(i-.5,color='white',lw=1.3)
         set_title(ax,'Expanded PTM sensitivities')
-        return f,f'Supplied sensitivity plotting code; {len(order)} selected features. Colour scale ±{vmax:.3g}; '+str(df.effect_units.iloc[0])+'. Open circles: pointwise 95% HDIs exclude zero. Subset restriction and covariate adjustment are separate analyses. No multiplicity control.'
+        return f,f'Posterior mean effects across model variants. Colour scale ±{vmax:.3g}; '+str(df.effect_units.iloc[0])+'. Open circles: pointwise 95% HDIs exclude zero. Subset restriction and covariate adjustment are separate analyses. No multiplicity control.'
     if kind=='sensitivity_comparison':
         if df.comparison.nunique()!=1:raise ValueError('Select one matched comparison.')
         x=df.sort_values(['gene_base','feature_id_base']).reset_index(drop=True);order=x.key.tolist();labels=feature_labels(x,'gene_base','feature_id_base')
@@ -238,7 +238,7 @@ def _manuscript_plot(df,req,kind):
             if metric=='coverage':ax.axvline(.95,color=MID_GREY,ls='--',lw=1);ax.set_xlim(0,1.03);ax.set_xlabel('95% HDI coverage')
             elif metric=='bias':ax.axvline(0,color=MID_GREY,ls='--',lw=1);ax.set_xlabel('Bias (parameter units)')
             else:ax.set_xlim(left=0);ax.set_xlabel('RMSE (parameter units)')
-        return f,'Supplied calibration plotting code. Blue: all completed; pink: numerically adequate. Coverage bars: 95% Wilson intervals; bias bars: ±1.96 Monte Carlo SE; RMSE has no uncertainty bars. Dashed lines: nominal 0.95 coverage or zero bias. SBC is prior predictive. No screen-wide false-discovery guarantee.'
+        return f,'Blue: all completed; pink: numerically adequate. Coverage bars: 95% Wilson intervals; bias bars: ±1.96 Monte Carlo SE; RMSE has no uncertainty bars. Dashed lines: nominal 0.95 coverage or zero bias. SBC is prior predictive. No screen-wide false-discovery guarantee.'
     if kind=='calibration_completion':
         shown=[s for s in SCENARIOS if s in set(df.scenario)];counts=df.set_index('scenario').loc[shown]
         f,ax=panel(4.2,1.85,left=1.75,bottom=.65,top=.4,right=.2);y=np.arange(len(shown))
@@ -255,7 +255,7 @@ def _manuscript_plot(df,req,kind):
             ax.bar(centres,bc,bottom=counts-bc,width=.112,color=MAGENTA,edgecolor='white',zorder=3)
             ax.plot(centres,expected,color=INK,lw=1,ls='--');ax.step(edges,np.r_[high,high[-1]],where='post',color=MID_GREY,lw=.8);ax.step(edges,np.r_[low,low[-1]],where='post',color=MID_GREY,lw=.8)
             ax.set_title(textwrap.fill(title,24),fontsize=10,loc='left');ax.set_xlabel('Rank / (draws + 1)');ax.set_ylabel('Replicates' if list(QUANTITIES).index(q)%3==0 else '');ax.set_xlim(0,1);ax.set_ylim(0,max(float(counts.max()),float(high.max()))*1.22);ax.text(.98,.94,f'n={counts.sum()}; failed={bc.sum()}',ha='right',va='top',transform=ax.transAxes,fontsize=8);style_axis(ax,grid='y')
-        return f,'Prior-predictive SBC only. Blue: adequate; pink: failures retained. Dashed expected counts and gray pointwise 95% binomial limits use discrete uniform ranks. Not simultaneous bands or a formal calibration test. Fixed tie seed 20261004.'
+        return f,'Prior-predictive SBC only. Blue: adequate; pink: failures retained. Dashed expected counts and gray pointwise 95% binomial limits use discrete uniform ranks. Not simultaneous bands or a formal calibration test.'
     raise ValueError('Unknown manuscript plot type')
 
 def render(request_json):
@@ -314,7 +314,7 @@ def render(request_json):
             fig=_CAPTURED
             fig.axes[0].set_xlabel('Cell type' if df.cell_type.notna().any() else 'Effect component')
             fig.axes[0].set_ylabel('Signature / feature')
-            note=f'{len(row_names)} rows ranked by maximum absolute posterior mean. Original study heatmap renderer. Scale: −{vmax:.3g} (blue) to +{vmax:.3g} (magenta), white = 0; units: {units}. Circle: pointwise 95% HDI excludes zero. Empty cells are unavailable.'
+            note=f'{len(row_names)} rows ranked by maximum absolute posterior mean. Scale: −{vmax:.3g} (blue) to +{vmax:.3g} (magenta), white = 0; units: {units}. Circle: pointwise 95% HDI excludes zero. Empty cells are unavailable.'
     elif kind == 'signatures':
         if df.cell_type.nunique()!=1:
             raise ValueError('Select one cell type to compare its signatures.')

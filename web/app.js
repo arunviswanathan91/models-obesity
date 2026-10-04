@@ -137,7 +137,7 @@ let busy=false,activePlotId=null,pendingPlot=null;
 function dispatchPlot(job){busy=true;activePlotId=job.id;state.worker.postMessage(job);}
 function startWorker(){
  if(state.worker)return;
- state.worker=new Worker('./plot-worker.js?v=manuscript-python-1',{type:'module'});
+ state.worker=new Worker('./plot-worker.js?v=manuscript-python-2',{type:'module'});
  state.worker.onmessage=({data})=>{
   if(data.status){if(data.id===state.plotId)status(data.status);return;}
   if(data.id===activePlotId){busy=false;activePlotId=null;}
