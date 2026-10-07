@@ -4,6 +4,7 @@ const $=id=>document.getElementById(id);
 const sections=[['rna','RNA programmes'],['rna_protein','RNA–protein'],['ptm','Protein & PTM'],['manuscript','Manuscript data'],['simulation','Simulations'],['reference','Deconvolution & PCA'],['signatures','Gene signatures'],['single_cell','Single-cell reference']];
 const state={catalog:[],section:'rna',dataset:null,rows:[],filtered:[],facets:{},page:0,view:'plot',mode:'biology',version:0,figure:null,worker:null,plotId:0};
 const cache=new Map();
+let autoPlotTimer=null;
 const number=new Intl.NumberFormat('en',{maximumSignificantDigits:5});
 const human=s=>String(s).replaceAll('_',' ');
 function programmeLabel(r){const key=r.feature||r.programme;const names=PROGRAMME_LABELS[key];return names?names.map(n=>human(n.replace(/_Signature$/,''))).join(' / ')+' ['+key.slice(-6)+']':r.label||r.feature||r.programme;}
@@ -17,7 +18,7 @@ function requestDownload(){ $('download-contact').showModal(); }
 function save(){ requestDownload(); }
 function csvCell(v){let s=v==null?'':typeof v==='object'?JSON.stringify(v):String(v);if(/^[=+@\t\r]/.test(s)||(/^-.+/.test(s)&&!Number.isFinite(Number(s))))s="'"+s;return '"'+s.replaceAll('"','""')+'"';}
 function filteredCSV(rows){const cols=[...new Set(rows.flatMap(Object.keys))];return [cols.map(csvCell).join(','),...rows.map(r=>cols.map(c=>csvCell(r[c])).join(','))].join('\r\n');}
-function clearFigure(){state.plotId++;pendingPlot=null;$('cancel-plot').hidden=true;state.figure=null;$('svg').disabled=$('png').disabled=true;$('plot-caption').textContent='';$('figure-container').replaceChildren(el('div','Choose a figure type and draw the current selection.',{class:'plot-empty'}));}
+function clearFigure(){clearTimeout(autoPlotTimer);autoPlotTimer=null;$('draw').hidden=true;state.plotId++;pendingPlot=null;$('cancel-plot').hidden=true;state.figure=null;$('svg').disabled=$('png').disabled=true;$('plot-caption').textContent='';$('figure-container').replaceChildren(el('div','Select a figure type to preview the current selection.',{class:'plot-empty'}));}
 const runLabel={immune_coarse:'Coarse immune',immune_fine:'Fine immune',nonimmune:'Non-immune'};
 
 function brief(d){
@@ -82,7 +83,7 @@ async function loadDataset(){
   let rows=cache.get(d.id);
   if(!rows&&d.id==='rna/compartment_diagnostics'){rows=[];for(const run of ['immune_coarse','immune_fine','nonimmune','categorical_immune_coarse','categorical_immune_fine','categorical_nonimmune']){const ds=await api('atlas_web_rows',{select:'data',dataset_id:'eq.'+run+'/run_diagnostics',order:'row_number.asc',limit:10});if(version!==state.version)return;rows.push(...ds.map(x=>({...x.data,compartment:run.replace('categorical_',''),bmi_model:run.startsWith('categorical_')?'categorical':'continuous'})));}cache.set(d.id,rows);}
   if(!rows){rows=[];for(let offset=0;offset<d.row_count;offset+=1000){const page=await api('atlas_web_rows',{select:'row_number,data',dataset_id:'eq.'+d.id,order:'row_number.asc',limit:1000,offset});if(version!==state.version)return;if(!page.length)throw Error('Incomplete data response. Please retry.');rows.push(...page.map(x=>x.data));status('Loading results: '+number.format(rows.length)+' / '+number.format(d.row_count));}if(rows.length!==d.row_count)throw Error('The collection changed during loading. Please reload.');cache.set(d.id,rows);}
-  if(version!==state.version)return;state.rows=rows;$('include-failed').checked=d.kind==='diagnostics';buildFacets();applyFilters();view(state.mode==='biology'&&plotTypes().length?'plot':'table');$('view-plot').hidden=!plotTypes().length;status('');
+  if(version!==state.version)return;state.rows=rows;$('include-failed').checked=d.kind==='diagnostics';buildFacets();applyFilters();view(plotTypes().length&&(state.mode==='biology'||state.view==='plot')?'plot':'table');$('view-plot').hidden=!plotTypes().length;status('');
  }catch(e){if(version===state.version){status(e.message,true);$('result-count').textContent='';}}
 }
 const facetFields=['template','quantity','numerical_pass','bmi_model','entity_level','variant','component','contrast','units','cell_type','assay','geometry','kind','rule','scenario','check','domain','parameter_family','compartment','analysis_set','PC','CellType','reference','resolution','scope','endpoint','cap','mode','layer','metric','comparison','family','stratum'];
@@ -97,7 +98,7 @@ function buildFacets(preserve=false){
 }
 function applyFilters(){
  const term=$('search').value.trim().toLowerCase();state.filtered=state.rows.filter(r=>Object.entries(state.facets).every(([k,v])=>!v||String(r[k])===v)&&(state.dataset.kind==='diagnostics'||$('include-failed').checked||![false,'False','false'].includes(r.numerical_checks_pass))&&(!term||searchable(r).some(v=>v!=null&&String(v).toLowerCase().includes(term))));
- state.page=0;clearFigure();$('download').disabled=!state.filtered.length;$('download-json').disabled=!state.filtered.length;$('result-count').textContent=number.format(state.filtered.length)+' / '+number.format(state.rows.length)+' rows';drawTable();setupPlot();renderDiagnostics();renderSignatureDetail();$('view-plot').hidden=!plotTypes().length;$('selection-summary').textContent=[state.dataset.kind==='effects'?'Pointwise 95% intervals':'Saved analysis summaries',...['variant','component','contrast','units'].map(k=>state.facets[k]?human(state.facets[k]):'').filter(Boolean)].join(' · ');
+ state.page=0;clearFigure();$('download').disabled=!state.filtered.length;$('download-json').disabled=!state.filtered.length;$('result-count').textContent=number.format(state.filtered.length)+' / '+number.format(state.rows.length)+' rows';drawTable();setupPlot();schedulePlot();renderDiagnostics();renderSignatureDetail();$('view-plot').hidden=!plotTypes().length;$('selection-summary').textContent=[state.dataset.kind==='effects'?'Pointwise 95% intervals':'Saved analysis summaries',...['variant','component','contrast','units'].map(k=>state.facets[k]?human(state.facets[k]):'').filter(Boolean)].join(' · ');
 }
 function drawTable(){
  const rows=state.filtered;const keys=[...new Set(rows.flatMap(Object.keys))];const first=state.dataset.kind==='signatures'?['signature','gene_count','genes','cell_type']:state.dataset.kind==='effects'?['label','cell_type','gene','estimate','hdi_lower','hdi_upper','units','contrast','component','variant','numerical_checks_pass']:[];const cols=state.mode==='biology'&&state.dataset.kind==='effects'?['label','cell_type','gene','estimate','hdi_lower','hdi_upper','units'].filter(k=>keys.includes(k)):[...first.filter(k=>keys.includes(k)),...keys.filter(k=>!first.includes(k))];
@@ -132,7 +133,13 @@ function setupPlot(){
 }
 function plotControls(){const t=$('plot-type').value;$('x-wrap').hidden=true;$('y-wrap').hidden=t!=='simulation';$('plot-y').parentElement.firstChild.textContent='Metric';$('plot-limit').parentElement.hidden=!['forest','heatmap'].includes(t);$('draw').disabled=!state.filtered.length||!plotTypes().length;}
 function fade(node){node.classList.remove('fade-in');void node.offsetWidth;node.classList.add('fade-in');}
-function view(which){if(which==='plot'&&!plotTypes().length)which='table';state.view=which;$('table-panel').hidden=which!=='table';$('plot-panel').hidden=which!=='plot';$('view-table').setAttribute('aria-selected',which==='table');$('view-plot').setAttribute('aria-selected',which==='plot');fade($(which==='plot'?'plot-panel':'table-panel'));}
+function view(which){if(which==='plot'&&!plotTypes().length)which='table';state.view=which;$('table-panel').hidden=which!=='table';$('plot-panel').hidden=which!=='plot';$('view-table').setAttribute('aria-selected',which==='table');$('view-plot').setAttribute('aria-selected',which==='plot');fade($(which==='plot'?'plot-panel':'table-panel'));if(which==='plot'){schedulePlot();}else{clearFigure();}}
+function schedulePlot(){
+ clearFigure();
+ if(state.view!=='plot'||!state.dataset||!state.filtered.length||!plotTypes().length)return;
+ status('Updating figure…');
+ autoPlotTimer=setTimeout(()=>{autoPlotTimer=null;drawPlot();},200);
+}
 let busy=false,activePlotId=null,pendingPlot=null;
 function dispatchPlot(job){busy=true;activePlotId=job.id;state.worker.postMessage(job);}
 function startWorker(){
@@ -143,16 +150,16 @@ function startWorker(){
   if(data.id===activePlotId){busy=false;activePlotId=null;}
   if(data.id===state.plotId){
    $('draw').disabled=!state.filtered.length||!plotTypes().length;$('cancel-plot').hidden=true;
-   if(data.error)status(data.error.split('\n').filter(Boolean).slice(-1)[0],true);
+   if(data.error){$('draw').hidden=false;status(data.error.split('\n').filter(Boolean).slice(-1)[0],true);}
    else{state.figure=data.result;const img=el('img',undefined,{alt:state.dataset.title+' — '+$('plot-type').selectedOptions[0].text});const url=URL.createObjectURL(new Blob([data.result.svg],{type:'image/svg+xml'}));img.onload=()=>URL.revokeObjectURL(url);img.src=url;$('figure-container').replaceChildren(img);$('plot-caption').textContent=data.result.caption;$('svg').disabled=$('png').disabled=false;status('Figure ready.');}
   }
   if(pendingPlot){const next=pendingPlot;pendingPlot=null;if(next.id===state.plotId)dispatchPlot(next);}
  };
- state.worker.onerror=()=>{busy=false;activePlotId=null;pendingPlot=null;$('draw').disabled=!state.filtered.length;$('cancel-plot').hidden=true;status('Plotting stopped. Choose Draw figure to restart it; the data remain available.',true);state.worker.terminate();state.worker=null;};
+ state.worker.onerror=()=>{busy=false;activePlotId=null;pendingPlot=null;$('draw').disabled=!state.filtered.length;$('cancel-plot').hidden=true;$('draw').hidden=state.view!=='plot';status('Plotting stopped. Select Retry figure or change a plotting option to try again.',true);state.worker.terminate();state.worker=null;};
 }
 function drawPlot(){
  if(!plotTypes().length||!state.filtered.length)return;
- const id=++state.plotId;startWorker();$('draw').disabled=true;$('cancel-plot').hidden=false;
+ clearTimeout(autoPlotTimer);autoPlotTimer=null;$('draw').hidden=true;const id=++state.plotId;startWorker();$('draw').disabled=true;$('cancel-plot').hidden=false;
  const job={id,request:{scale_rows:state.dataset.id==='manuscript/ptm_heatmap_lookup'?state.rows:undefined,rows:state.filtered.map(r=>r.feature&&PROGRAMME_LABELS[r.feature]?{...r,label:programmeLabel(r)}:r),type:$('plot-type').value,y:$('plot-y').value,limit:Number($('plot-limit').value),title:state.dataset.title}};
  if(busy){pendingPlot=job;status('Figure queued. You can continue browsing or return Home.');}else{status('Preparing the figure. Navigation remains available.');dispatchPlot(job);}
 }
@@ -271,7 +278,7 @@ function renderDiagnosticDistribution(spec,points){
 
 $('diagnostic-svg').onclick=()=>save(diagnosticSVG,'atlas_'+$('diagnostic-metric').value+'.svg','image/svg+xml');
 
-$('dataset').onchange=loadDataset;document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$('compartment').onchange=$('bmi-model').onchange=()=>changeSection(state.section);$('collection-search').oninput=()=>changeSection(state.section);$('diagnostic-metric').onchange=renderDiagnosticChart;$('search').oninput=applyFilters;$('include-failed').onchange=applyFilters;$('reset').onclick=()=>{$('search').value='';$('include-failed').checked=state.dataset?.kind==='diagnostics';buildFacets();applyFilters();};$('prev').onclick=()=>{state.page--;drawTable();};$('next').onclick=()=>{state.page++;drawTable();};$('view-table').onclick=()=>view('table');$('view-plot').onclick=()=>view('plot');$('plot-type').onchange=()=>{clearFigure();plotControls();};$('draw').onclick=drawPlot;
+$('dataset').onchange=loadDataset;document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$('compartment').onchange=$('bmi-model').onchange=()=>changeSection(state.section);$('collection-search').oninput=()=>changeSection(state.section);$('diagnostic-metric').onchange=renderDiagnosticChart;$('search').oninput=applyFilters;$('include-failed').onchange=applyFilters;$('reset').onclick=()=>{$('search').value='';$('include-failed').checked=state.dataset?.kind==='diagnostics';buildFacets();applyFilters();};$('prev').onclick=()=>{state.page--;drawTable();};$('next').onclick=()=>{state.page++;drawTable();};$('view-table').onclick=()=>view('table');$('view-plot').onclick=()=>view('plot');$('plot-type').onchange=()=>{plotControls();schedulePlot();};for(const id of ['plot-x','plot-y','plot-limit'])$(id).onchange=schedulePlot;$('draw').onclick=drawPlot;
 for(const id of ['download-json','download','svg','png','pca-download','manifest-download','diagnostic-svg']) $(id).onclick=requestDownload;
 $('download-contact-close').onclick=()=> $('download-contact').close();
 for(const [i,[id,name]]of sections.entries()){const b=el('button',undefined,{role:'tab','aria-selected':id===state.section});b.dataset.section=id;b.append(el('span',String(i+1).padStart(2,'0'),{class:'num'}),el('span',name));b.onclick=()=>changeSection(id);$('sections').append(b);}
