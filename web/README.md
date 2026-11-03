@@ -15,3 +15,8 @@ This repository remains the canonical source. The lab workflow uses a reviewed v
 ## Interpretation
 
 Filters keep distinct effect components, units and contrasts separate. Numerical failures are excluded by default. Heatmap circles and filled forest-plot dots indicate pointwise HDIs excluding zero; they are not multiplicity-controlled discovery markers. The browser includes a dedicated interpretation section.
+
+
+## Manuscript numbering
+
+Collection labels follow the manuscript and main/supplementary decks supplied on 3 November 2026: Figures 1–7 and S1–S24. See [the figure map](../docs/manuscript_figure_map.md) and [machine-readable references](manuscript-figures.json). Data retain the frozen October release identity and original source hashes. Catalogue labels are read from Supabase on page load, so this metadata update becomes visible after reloading the Atlas without changing the deployed renderer.

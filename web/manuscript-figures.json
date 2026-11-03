@@ -1,0 +1,170 @@
+{
+  "revision": "2026-11-03",
+  "main_figures": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "supplementary_figures": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "reference_files": [
+    {
+      "name": "Manuscript_figS_renumbered_tracked(2).docx",
+      "sha256": "eb355eb9e04873bf1fb07c667f3ca3c1cfd83092da31538eb94f91409e692ae9"
+    },
+    {
+      "name": "Main_Figures_A4_updated_captions(1).pptx",
+      "sha256": "5dee3c395c0297e7e218083e42bb78e1bbce593f4b9d68140caff9423ffb9619"
+    },
+    {
+      "name": "Supplementary_Figures_S1-S19.pptx",
+      "sha256": "57882dc3f5ede0916e5ad43e6d6a57b74e4f12df80c86797e664d453f6c11212"
+    }
+  ],
+  "datasets": {
+    "manuscript/asah1_labels": {
+      "title": "Figure S15b · ASAH1 glycofeature identities",
+      "description": "A01–A20 identify distinct peptide-plus-glycan features. All 20 conditional estimates are retained."
+    },
+    "manuscript/candidate_sensitivity_coverage": {
+      "title": "Figure S14b · candidate sensitivity coverage",
+      "description": "Covariate-sensitivity availability for 27 of 81 primary conditional candidates: 24 selected features plus three ASAH1 glycoforms."
+    },
+    "manuscript/glyco_labels": {
+      "title": "Figure 6d · glycofeature labels",
+      "description": "The 20 displayed glycofeatures with complete peptide and glycan identities and both effect columns."
+    },
+    "manuscript/phospho_labels": {
+      "title": "Figure 6c · phosphosite labels",
+      "description": "The 14 displayed phosphosites with complete feature identities and both effect columns."
+    },
+    "manuscript/ptm_calibration_completion": {
+      "title": "Figure S21b · calibration sample counts",
+      "description": "250 completed simulated datasets; 249 numerically adequate."
+    },
+    "manuscript/ptm_calibration_replicates": {
+      "title": "Figures S18–S20 · per-replicate calibration metrics",
+      "description": "250 simulated datasets × six quantities. Literal null denotes the null scenario; these are simulated quantities, not patient records."
+    },
+    "manuscript/ptm_calibration_summary": {
+      "title": "Figures S18–S20 · PTM calibration summary",
+      "description": "Six quantities, five scenarios and two scopes: all completed versus numerically adequate fits. Figure S18 shows coverage, S19 bias and S20 RMSE. Coverage bars are Wilson confidence intervals, not HDIs. No screen-wide false-discovery control."
+    },
+    "manuscript/ptm_calibration_templates": {
+      "title": "Figures S18–S20 · calibration by template",
+      "description": "Separate phospho and glyco template results; aggregate summaries across simulated replicates."
+    },
+    "manuscript/ptm_heatmap_lookup": {
+      "title": "Figures 6c,d · PTM heatmap identities and estimates",
+      "description": "All 14 phospho and top 20 of 67 glyco conditional candidates. Gene, site/peptide/glycan, both effects and pointwise HDIs; magnitude-ranked without multiplicity control."
+    },
+    "manuscript/ptm_sbc_bins": {
+      "title": "Figure S21a · SBC rank histogram counts",
+      "description": "Pointwise 95% binomial reference limits are not simultaneous bands or a formal calibration test."
+    },
+    "manuscript/ptm_sbc_values": {
+      "title": "Figure S21a · SBC ranks",
+      "description": "Prior-predictive SBC ranks for 50 simulated datasets × six quantities. Randomized ties use seed 20261004."
+    },
+    "manuscript/rna_heatmap_values": {
+      "title": "Figure 3a · RNA heatmap values",
+      "description": "Displayed continuous RNA coefficients for the 24 selected signature rows. Unmodeled combinations remain missing. The named examples in Figures 3b–e are available in the compartment RNA effects collections."
+    },
+    "manuscript/rna_protein_heatmap_values": {
+      "title": "Figure 5e · RNA–protein heatmap values",
+      "description": "Displayed paired-model RNA and protein slopes and direct protein-minus-RNA contrasts."
+    },
+    "manuscript/rna_protein_labels": {
+      "title": "Figure 5e · RNA–protein programme labels",
+      "description": "RP01–RP16 link displayed labels to unique measured programmes and source signatures."
+    },
+    "manuscript/sensitivity_classifications": {
+      "title": "Figure S22b · interval classifications",
+      "description": "Counts retained or changed in each comparison among 24 post hoc features. Both compared fits must be numerically adequate."
+    },
+    "manuscript/sensitivity_comparisons": {
+      "title": "Figures S23–S24 · matched sensitivity comparisons",
+      "description": "192 comparisons. Figure S23: fixed plex, stage subset, stage adjustment and purity subset. Figure S24: purity adjustment, mutation adjustment, weight-loss exclusion and adenosquamous exclusion. Stage and purity adjustment use the matched unadjusted subset; restriction and other variants use the primary fit. Classification changes are descriptive, not posterior contrast tests."
+    },
+    "manuscript/sensitivity_feature_labels": {
+      "title": "Figures S22–S24 · sensitivity feature identities",
+      "description": "E01–E24 map to the 24 post hoc selected features from CTSD, HLA-DRA, LAMC1, POSTN and GSDMD."
+    },
+    "ptm/asah1_paired": {
+      "title": "ASAH1 · paired model quantities",
+      "description": "Primary protein, marginal PTM and conditional PTM effects, standardized slope differences, coupling and residual correlation. All 20 parent-protein BMI intervals include zero."
+    },
+    "ptm/extended_sensitivity_effects": {
+      "title": "Figures S22–S24 · expanded PTM sensitivity estimates",
+      "description": "24 post hoc selected features, primary references and eight sensitivity variants. 192 refits; all numerically adequate. Figure S22a shows the overview; Figures S23–S24 show variant-specific comparisons. Use matched subsets for stage and purity adjustment."
+    },
+    "ptm/extended_sensitivity_predictive": {
+      "title": "Expanded PTM sensitivity · predictive checks",
+      "description": "Saved predictive checks for the 192 refits. Sampling adequacy and predictive fit assess different aspects of a model."
+    }
+  },
+  "panel_mapping": {
+    "3a": "RNA heatmap",
+    "3b–e": "Named continuous RNA examples, formerly Figure S23",
+    "6c": "All 14 conditional phospho candidates",
+    "6d": "Top 20 of 67 conditional glyco candidates",
+    "S14a": "Protein-conditioned PTM landscape",
+    "S14b": "Candidate diagnostic and sensitivity coverage",
+    "S15a": "STAT3 Y705/S727 estimates",
+    "S15b": "ASAH1 glycofeature estimates and identities",
+    "S16a": "STAT3 continuous sensitivity",
+    "S16b": "STAT3 categorical contrasts",
+    "S16c": "STAT3 and ASAH1 bootstrap benchmarks",
+    "S17a": "Cellular RNA workflow",
+    "S17b": "RNA–protein workflow",
+    "S17c": "Protein–PTM workflow",
+    "S18": "PTM interval coverage",
+    "S19": "PTM bias",
+    "S20": "PTM RMSE",
+    "S21a": "SBC ranks",
+    "S21b": "Simulation completion",
+    "S22a": "PTM sensitivity overview",
+    "S22b": "Interval classifications",
+    "S23a": "Fixed plex versus primary",
+    "S23b": "Stage subset versus primary",
+    "S23c": "Stage adjustment versus matched subset",
+    "S23d": "Purity subset versus primary",
+    "S24a": "Purity adjustment versus matched subset",
+    "S24b": "Mutation adjustment versus primary",
+    "S24c": "Weight-loss exclusion versus primary",
+    "S24d": "Adenosquamous exclusion versus primary"
+  },
+  "notes": [
+    "The supplementary reference deck contains 24 slides (S1–S24), despite its S1-S19 filename.",
+    "The frozen October source archive retains its historical figure filenames and source hashes. Current figure placement is defined here.",
+    "The two ASAH1 CSVs are separate archived sources; they are not included in the supplied figure ZIP."
+  ]
+}
