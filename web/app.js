@@ -144,7 +144,7 @@ let busy=false,activePlotId=null,pendingPlot=null;
 function dispatchPlot(job){busy=true;activePlotId=job.id;state.worker.postMessage(job);}
 function startWorker(){
  if(state.worker)return;
- state.worker=new Worker('./plot-worker.js?v=manuscript-python-2',{type:'module'});
+ state.worker=new Worker('./plot-worker.js?v=manuscript-python-3',{type:'module'});
  state.worker.onmessage=({data})=>{
   if(data.status){if(data.id===state.plotId)status(data.status);return;}
   if(data.id===activePlotId){busy=false;activePlotId=null;}
@@ -283,3 +283,4 @@ for(const id of ['download-json','download','svg','png','pca-download','manifest
 $('download-contact-close').onclick=()=> $('download-contact').close();
 for(const [i,[id,name]]of sections.entries()){const b=el('button',undefined,{role:'tab','aria-selected':id===state.section});b.dataset.section=id;b.append(el('span',String(i+1).padStart(2,'0'),{class:'num'}),el('span',name));b.onclick=()=>changeSection(id);$('sections').append(b);}
 (async()=>{try{state.catalog=await api('atlas_web_datasets',{select:'id,section,title,kind,description,run_key,row_count,provisional',order:'id.asc',limit:200});for(const d of state.catalog){if(d.kind==='signatures')d.title='Gene signature catalogue';}if(state.catalog.length)state.catalog.push({id:'reference/pca_original',section:'reference',title:'PCA by cell type',kind:'pca_original',row_count:0,run_key:'reference'},{id:'rna/compartment_diagnostics',section:'rna',title:'All RNA compartments: sampling overview',kind:'diagnostics',row_count:6,run_key:'overview'});if(!state.catalog.length){$('connection').textContent='Website ready · data release pending';$('dataset-title').textContent='Collections awaiting publication';status('The results have been prepared. Public access will open after the lab approves the data release.');$('search').disabled=true;$('reset').disabled=true;return;}$('connection').textContent=state.catalog.length+' collections · connected to the research data';const p=new URLSearchParams(location.hash.slice(1));const d=state.catalog.find(d=>d.id===p.get('dataset'));state.mode=['biology','reliability','advanced'].includes(p.get('mode'))?p.get('mode'):(d&&d.kind!=='effects'?'advanced':'biology');syncRunControls(d);updateModeUI();changeSection(d?.section||'rna',d?.id||'immune_coarse/effects');}catch(e){$('connection').textContent='Connection unavailable';$('dataset-title').textContent='Results temporarily unavailable';status(e.message,true);}})();
+

@@ -148,6 +148,23 @@ def feature_labels(df, gene='gene', feature='feature_id'):
         return str(r[gene])+' | '+f
     return df.apply(label,axis=1).tolist()
 
+
+def nonnegative_error_lengths(values, label):
+    """Remove subtraction roundoff, but never disguise an invalid interval/SE.
+
+    Wilson endpoints at a boundary can differ from the estimate by one ulp.
+    Matplotlib rejects even that tiny negative length. NaNs represent filtered
+    scenarios and must stay missing; all positive lengths remain unchanged.
+    """
+    errors = np.asarray(values, dtype=float).copy()
+    finite = errors[np.isfinite(errors)]
+    scale = max(1.0, float(np.max(np.abs(finite)))) if finite.size else 1.0
+    tolerance = 32 * np.finfo(float).eps * scale
+    if np.isinf(errors).any() or (errors < -tolerance).any():
+        raise ValueError(label + ' must be finite and nonnegative; check the source interval or standard error.')
+    errors[(errors < 0) & (errors >= -tolerance)] = 0.0
+    return errors
+
 def manuscript_plot(df, req):
     kind=req['type']
     with mpl.rc_context(MANUSCRIPT_STYLE):
@@ -230,8 +247,8 @@ def _manuscript_plot(df,req,kind):
         for ax,(q,title) in zip(axs.flat,QUANTITIES.items()):
             for scope,offset in [('All completed',-.12),('Numerically adequate',.12)]:
                 g=summary[(summary.scope==scope)&(summary.quantity==q)].set_index('scenario').reindex(SCENARIOS);xx=g[metric].to_numpy();yy=np.arange(5)+offset
-                if metric=='coverage':err=np.vstack([xx-g.coverage_low,g.coverage_high-xx])
-                elif metric=='bias':err=1.96*g.bias_mcse.to_numpy()
+                if metric=='coverage':err=nonnegative_error_lengths(np.vstack([xx-g.coverage_low,g.coverage_high-xx]),'Coverage interval lengths')
+                elif metric=='bias':err=nonnegative_error_lengths(1.96*g.bias_mcse.to_numpy(),'Bias Monte Carlo error lengths')
                 else:err=None
                 ax.errorbar(xx,yy,xerr=err,fmt='o',ms=4,color=scope_colors[scope],lw=1.4,capsize=2)
             ax.set_yticks(range(5),[SCENARIO_LABELS[s] for s in SCENARIOS] if list(QUANTITIES).index(q)%2==0 else ['']*5,fontsize=9);ax.invert_yaxis();ax.set_title(textwrap.fill(title,28),fontsize=10,loc='left');style_axis(ax)
@@ -344,7 +361,7 @@ def render(request_json):
             ax.scatter(df.scenario,df[metric],color=TEAL)
             mcse=metric.replace('_mean','_mcse') if '_mean' in metric else ''
             if mcse in df:
-                err=pd.to_numeric(df[mcse],errors='coerce')
+                err=nonnegative_error_lengths(pd.to_numeric(df[mcse],errors='coerce'),'Simulation Monte Carlo error lengths')
                 ax.errorbar(df.scenario,df[metric],yerr=err,fmt='none',color=TEAL,capsize=3)
                 note='Scenario-level estimates with ±1 Monte Carlo standard error. These error bars are not 95% confidence intervals.'
             else:note='Scenario-level summaries. No uncertainty bars are inferred from unavailable values.'
@@ -428,3 +445,4 @@ def render(request_json):
     fig.savefig(png,format='png',dpi=180,bbox_inches='tight',pad_inches=.12,bbox_extra_artists=[label for ax in fig.axes for label in (ax.xaxis.label,ax.yaxis.label)])
     plt.close(fig)
     return json.dumps({'svg':svg.getvalue(),'png':base64.b64encode(png.getvalue()).decode(),'caption':note})
+

@@ -26,4 +26,49 @@ class ManuscriptRenderer(unittest.TestCase):
         self.assertIn("Null",result["svg"])
         self.assertIn("Wilson",result["caption"])
 
+    def test_coverage_at_one_preserves_estimate_and_interval(self):
+        # Actual template summaries contain 1.0 with a Wilson upper bound one
+        # floating-point step below 1.0. This previously raised negative xerr.
+        rows=[dict(scope=scope,scenario="null",quantity=q,coverage=1.0,
+                   coverage_low=.8668077490609515,
+                   coverage_high=p.np.nextafter(1.0,0.0))
+              for q in p.QUANTITIES for scope in ["All completed","Numerically adequate"]]
+        fig,_=p.manuscript_plot(p.pd.DataFrame(rows),dict(type="calibration_coverage"))
+        try:
+            fig.canvas.draw()
+            for ax in fig.axes:
+                for bars in ax.containers:
+                    self.assertEqual(bars.lines[0].get_xdata()[0],1.0)
+                    segment=bars.lines[2][0].get_segments()[0]
+                    self.assertEqual(segment[0,0],.8668077490609515)
+                    self.assertEqual(segment[1,0],1.0)
+        finally:p.plt.close(fig)
+
+    def test_roundoff_only_is_clamped(self):
+        errors=p.np.array([-.5*p.np.finfo(float).eps,0.,.13,p.np.nan])
+        actual=p.nonnegative_error_lengths(errors,'Test')
+        p.np.testing.assert_equal(actual,[0.,0.,.13,p.np.nan])
+        self.assertLess(errors[0],0.,'source values must not be mutated')
+        for invalid in [[-.001],[p.np.inf],[-p.np.inf]]:
+            with self.assertRaisesRegex(ValueError,'source interval or standard error'):
+                p.nonnegative_error_lengths(invalid,'Test')
+
+    def test_zero_coverage_lower_bound_roundoff(self):
+        rows=[dict(scope='All completed',scenario='null',quantity='beta_protein',
+                   coverage=0.,coverage_low=p.np.finfo(float).eps,coverage_high=.14)]
+        result=json.loads(p.render(json.dumps(dict(type='calibration_coverage',rows=rows))))
+        self.assertIn('<svg',result['svg'])
+
+    def test_simulation_standard_errors_share_roundoff_guard(self):
+        rows=[dict(scenario='null',coverage_mean=.95,coverage_mcse=-1e-16),
+              dict(scenario='signal',coverage_mean=.96,coverage_mcse=.02)]
+        result=json.loads(p.render(json.dumps(dict(type='simulation',y='coverage_mean',rows=rows))))
+        self.assertIn('Monte Carlo',result['caption'])
+        rows[0]['coverage_mcse']=-.02
+        try:
+            with self.assertRaisesRegex(ValueError,'source interval or standard error'):
+                p.render(json.dumps(dict(type='simulation',y='coverage_mean',rows=rows)))
+        finally:p.plt.close('all')
+
 if __name__=="__main__":unittest.main()
+

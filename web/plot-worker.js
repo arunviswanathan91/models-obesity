@@ -8,7 +8,7 @@ async function initialize(id){
   await py.loadPackage(['numpy','pandas','matplotlib','micropip']);
   py.globals.set("seaborn_wheel_url",runtimeURL+"seaborn-0.13.2-py3-none-any.whl");
   await py.runPythonAsync("import micropip\nawait micropip.install(seaborn_wheel_url, deps=False)");
-  const response=await fetch('./plotting.py?v=manuscript-python-2');if(!response.ok)throw Error('Plotting code could not be loaded.');
+  const response=await fetch('./plotting.py?v=manuscript-python-3');if(!response.ok)throw Error('Plotting code could not be loaded.');
   await py.runPythonAsync(await response.text());
   return py;
 }
@@ -21,3 +21,4 @@ self.onmessage=async({data})=>{
     postMessage({id:data.id,result:JSON.parse(result)});
   }catch(e){postMessage({id:data.id,error:String(e.message||e)});}
 };
+
