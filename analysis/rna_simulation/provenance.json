@@ -1,0 +1,63 @@
+{
+  "notebook": "cellular_rna_simulation.ipynb",
+  "sha256": "e35e32ad03fa0e9eeaa771a82fc594398f83f1ae8922d8f7a94f23fbd77099fa",
+  "recorded_experiment": "focused_0f5aa4b532be5d0d",
+  "sources": [
+    {
+      "filename": "BHM_simulation_v5_shard_0.ipynb",
+      "sha256": "c030aff3866b33cbc2183b10708e5457c7205a938daafaa936c4145b0b165430"
+    },
+    {
+      "filename": "BHM_simulation_v5_shard_1.ipynb",
+      "sha256": "636eddfeea23a22ec91c8a3c99cfabe17d1708a6a626c4d3eef835b0f15c02a1"
+    },
+    {
+      "filename": "BHM_simulation_v5_shard_2.ipynb",
+      "sha256": "a555b398685d792b20f0077dab2ce4546ce97bea83122952239abc1520c598eb"
+    },
+    {
+      "filename": "BHM_simulation_v5_shard_3(2).ipynb",
+      "sha256": "cf6a2002d54d281416a8a600595dd44fb20db9aba4b3a324a40a8723821720fd"
+    }
+  ],
+  "source_comparison": {
+    "identical_function_definitions": 52,
+    "experiment_hashed_functions": 32,
+    "function_source_sha256": "8bb394faad0d43bb43a41dedae211decaa6d94bf1da2ac3c33e190230e875542",
+    "all_four_shards_match": true
+  },
+  "curation": {
+    "removed": [
+      "conversational markdown",
+      "saved outputs and execution metadata",
+      "unused audit_v4_failures function and launch cell"
+    ],
+    "changed_run_defaults": {
+      "RUN_SIMULATION": false,
+      "OUTPUT_BASE": "/content/drive/MyDrive/BHM_simulation_results_v5_release"
+    },
+    "model_priors_seeds_sampling_and_assessment_functions": "unchanged"
+  },
+  "validation": {
+    "python_cells_compile": true,
+    "notebook_structure_valid": true,
+    "outputs_cleared": true,
+    "design_conditions": 20,
+    "synthetic_datasets_checked": 200,
+    "tasks": 400,
+    "tasks_per_shard": [
+      100,
+      100,
+      100,
+      100
+    ],
+    "deterministic_regeneration": true,
+    "design_orthogonality_and_contrast_algebra": true,
+    "atlas_hdi_tasks_matched": 399,
+    "task_without_hdi_summary": "generic_K8_wide__null__rep0007__continuous",
+    "atlas_ols_contrasts_matched": 800,
+    "maximum_ols_comparison_error": 3.4134917115125063e-12,
+    "sampling_rerun": false,
+    "pymc_model_execution": false
+  }
+}

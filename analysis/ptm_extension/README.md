@@ -35,4 +35,3 @@ The eight specifications are fixed plex effects; stage subset; stage adjustment 
 
 Calibration uses 50 datasets each for the null, protein-only, conditional-signal, heavy-tail and prior-predictive SBC scenarios. Templates retain the observed paired-cohort covariates and missingness masks. Coverage and interval support are pointwise; they do not establish screen-wide false-discovery control.
 
-Scientific calculations, feature scope and thresholds are retained. One user-directed missing-file message and one instructional comment were neutralized. AST comparison found no computational changes. These checks validate source curation; they do not constitute a new sampling run.

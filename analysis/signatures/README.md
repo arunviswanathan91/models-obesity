@@ -26,8 +26,4 @@ The output and log directories must already exist. Use new output and log filena
 - Candidate duplicate pairs are computed once before review. The script preserves that original candidate-list behaviour, including during successive merges.
 - The log records applied actions and the model name. It does not retain complete prompts, model responses or independent literature validation. Biological suitability and supporting evidence require human review.
 
-## Provenance
-
-This workflow comes from [obese-model at fe14ec8](https://github.com/arunviswanathan91/obese-model/tree/fe14ec848bfeac469528dc87c5aea8aacb14a87c/03_LLM_signature_curation_with). Prompts, overlap rules and human-decision logic are retained. Two SDK integration issues were repaired: configuring the supplied API key and passing temperature inside `generation_config`, as required by the [SDK interface](https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/docs/api/google/generativeai/GenerativeModel.md). Paths accept environment overrides. See [provenance.json](provenance.json).
-
-The script documents the repository-hosted curation process. The frozen catalogue used for the manuscript must be obtained separately; rerunning an interactive LLM workflow is not a deterministic reconstruction of it. No live LLM requests were made during code verification.
+The frozen manuscript catalogue must be obtained separately; rerunning this interactive workflow will not reconstruct it deterministically. Source details are in [provenance.json](provenance.json).

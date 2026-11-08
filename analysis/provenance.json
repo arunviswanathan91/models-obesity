@@ -71,6 +71,10 @@
     {
       "path": "analysis/signatures/curate_signatures.py",
       "sha256": "98fb9f40611193df7e83e53aa6e43720d38a03d3ffa24399c6976fefd38f0e3f"
+    },
+    {
+      "path": "analysis/rna_simulation/cellular_rna_simulation.ipynb",
+      "sha256": "e35e32ad03fa0e9eeaa771a82fc594398f83f1ae8922d8f7a94f23fbd77099fa"
     }
   ],
   "independent_source_comparisons": [
@@ -199,5 +203,12 @@
     ],
     "offline_tests_passed": 3,
     "live_model_requests": 0
+  },
+  "rna_simulation": {
+    "recorded_experiment": "focused_0f5aa4b532be5d0d",
+    "detailed_provenance": "analysis/rna_simulation/provenance.json",
+    "identical_hashed_functions": 32,
+    "synthetic_datasets_checked": 200,
+    "model_assessments_rerun": 0
   }
 }
