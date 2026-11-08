@@ -50,3 +50,12 @@
   .xp-presets,.xp-reset{grid-column:1/-1}
 }
 @media(max-width:560px){.xp-controls{grid-template-columns:1fr}.xp-eqmain{font-size:17px}}
+
+/* published-estimate selector */
+.xp-real{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;
+  padding:10px 14px;background:var(--soft);border-radius:7px}
+.xp-real label{margin:0;font-size:12.5px;white-space:nowrap}
+.xp-real select{width:auto;min-width:240px;max-width:100%;margin:0;flex:1;font-size:12.5px}
+.xp-badge{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--teal)}
+.xp-badge:empty{display:none}
+@media(max-width:620px){.xp-real{gap:6px}.xp-real select{min-width:0;width:100%}}
