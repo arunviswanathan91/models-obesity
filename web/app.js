@@ -1,7 +1,8 @@
 import {CONFIG} from './config.js';
+import {EXPLAINERS,mountExplainer} from './explainers.js';
 import {PROGRAMME_LABELS} from './programme-labels.js';
 const $=id=>document.getElementById(id);
-const sections=[['rna','RNA programmes'],['rna_protein','RNA–protein'],['ptm','Protein & PTM'],['manuscript','Manuscript data'],['simulation','Simulations'],['reference','Deconvolution & PCA'],['signatures','Gene signatures'],['single_cell','Single-cell reference']];
+const sections=[['rna','RNA programmes'],['rna_protein','RNA–protein'],['ptm','Protein & PTM'],['equations','Equations'],['manuscript','Manuscript data'],['simulation','Simulations'],['reference','Deconvolution & PCA'],['signatures','Gene signatures'],['single_cell','Single-cell reference']];
 const state={catalog:[],section:'rna',dataset:null,rows:[],filtered:[],facets:{},page:0,view:'plot',mode:'biology',version:0,figure:null,worker:null,plotId:0};
 const cache=new Map();
 let autoPlotTimer=null;
@@ -22,6 +23,7 @@ function clearFigure(){clearTimeout(autoPlotTimer);autoPlotTimer=null;$('draw').
 const runLabel={immune_coarse:'Coarse immune',immune_fine:'Fine immune',nonimmune:'Non-immune'};
 
 function brief(d){
+ if(d.section==='equations')return d.description;
  if(d.run_key==='manuscript_ptm_20261004')return d.description;
  if(d.kind==='signatures')return 'Gene sets used to score biological programmes within cell types.';
  if(d.kind==='pca_original')return 'Original PCA figures for three deconvolution compartments.';
@@ -30,6 +32,7 @@ function brief(d){
  return explain(d);
 }
 function explain(d){
+ if(d.section==='equations')return d.description;
  if(d.run_key==='manuscript_ptm_20261004')return d.description;
  if(d.kind==='signatures')return 'A signature is a named group of genes representing a biological process. Browse its member genes and compare the number of genes across signatures within a cell type.';
  if(d.kind==='pca_original')return 'Principal component analysis (PCA) places similar expression profiles near one another. Choose a compartment to inspect separation among its cell types.';
@@ -59,7 +62,7 @@ function explain(d){
 
 const collectionLabel=d=>{const part=d.id.split('/')[1];return ({effects:'Effect estimates',run_diagnostics:'Sampling overview',diagnostic_families:'R-hat & ESS by parameter family',diagnostic_family_summary:'R-hat & ESS by parameter family',ppc_domain_checks:'Predictive checks · domains',ppc_v2_domain_checks:'Predictive checks · domains',ppc_feature_checks:'Predictive checks · features',ppc_v2_feature_checks:'Predictive checks · features',fit_status:'Sampling checks · all fits',run_status:'Sampling checks · all fits',predictive_checks:'Posterior predictive checks',all_predictive_checks:'Posterior predictive checks'})[part]||d.title;};
 function syncRunControls(d){if(d?.section==='rna'&&d.run_key!=='overview'){const categorical=d.run_key.startsWith('categorical_');$('bmi-model').value=categorical?'categorical':'continuous';$('compartment').value=d.run_key.replace('categorical_','');}}
-function availableCollections(section){return state.catalog.filter(d=>d.section===section).filter(d=>{if(state.mode==='advanced')return d.title.toLowerCase().includes($('collection-search').value.trim().toLowerCase());if(state.mode==='biology'&&d.kind!=='effects')return false;if(state.mode==='reliability'&&d.kind!=='diagnostics')return false;if(section==='rna'&&d.id!=='rna/compartment_diagnostics'){const run=($('bmi-model').value==='categorical'?'categorical_':'')+$('compartment').value;return d.run_key===run;}return true;});}
+function availableCollections(section){return state.catalog.filter(d=>d.section===section).filter(d=>{if(d.section==='equations')return true;if(state.mode==='advanced')return d.title.toLowerCase().includes($('collection-search').value.trim().toLowerCase());if(state.mode==='biology'&&d.kind!=='effects')return false;if(state.mode==='reliability'&&d.kind!=='diagnostics')return false;if(section==='rna'&&d.id!=='rna/compartment_diagnostics'){const run=($('bmi-model').value==='categorical'?'categorical_':'')+$('compartment').value;return d.run_key===run;}return true;});}
 function changeSection(section,preferred){
  fade($('results')); 
  if(['manuscript','simulation','reference','signatures','single_cell'].includes(section)&&state.mode!=='advanced'){state.mode='advanced';updateModeUI();}
@@ -75,9 +78,10 @@ function updateModeUI(){for(const b of document.querySelectorAll('[data-mode]'))
 function setMode(mode){if(mode!=='advanced'&&['manuscript','reference','signatures','single_cell','simulation'].includes(state.section))state.section='rna';state.mode=mode;$('collection-search').value='';syncRunControls(state.dataset);updateModeUI();changeSection(state.section,state.dataset?.id);}
 async function loadDataset(){
  const version=++state.version;state.dataset=state.catalog.find(d=>d.id===$('dataset').value);if(!state.dataset)return;
- const d=state.dataset;$('pca-panel').hidden=true;$('signature-detail').hidden=true;document.querySelector('.filter-card').hidden=false;document.querySelector('.viewbar').hidden=false;$('table-panel').hidden=false;$('analysis-explanation').textContent=explain(d);$('download-json').hidden=d.kind!=='signatures';$('download-json').disabled=true;$('search').disabled=false;$('reset').disabled=false;state.rows=[];state.filtered=[];state.facets={};state.page=0;clearFigure();$('search').value='';$('include-failed').checked=false;$('download').disabled=true;$('facets').replaceChildren();$('extra-facets').replaceChildren();$('diagnostic-panel').hidden=true;$('draw').disabled=true;$('tbody').replaceChildren();$('thead').replaceChildren();
+ const d=state.dataset;$('pca-panel').hidden=true;$('signature-detail').hidden=true;$('explainer-panel').hidden=true;document.querySelector('.filter-card').hidden=false;document.querySelector('.viewbar').hidden=false;$('table-panel').hidden=false;$('analysis-explanation').textContent=explain(d);$('download-json').hidden=d.kind!=='signatures';$('download-json').disabled=true;$('search').disabled=false;$('reset').disabled=false;state.rows=[];state.filtered=[];state.facets={};state.page=0;clearFigure();$('search').value='';$('include-failed').checked=false;$('download').disabled=true;$('facets').replaceChildren();$('extra-facets').replaceChildren();$('diagnostic-panel').hidden=true;$('draw').disabled=true;$('tbody').replaceChildren();$('thead').replaceChildren();
  $('dataset-title').textContent=state.mode==='advanced'||d.run_key==='overview'?d.title:(d.section==='rna'?runLabel[d.run_key.replace('categorical_','')]:sections.find(s=>s[0]===d.section)[1])+' · '+collectionLabel(d);$('dataset-description').textContent=brief(d);$('section-label').textContent=sections.find(s=>s[0]===d.section)[1];$('notice').hidden=!d.provisional;$('notice').textContent=d.provisional?'Provisional analysis: interpret these fine-immune categorical results with the diagnostic evidence.':'';
  if(d.kind==='pca_original'){showPCA();return;}
+ if(d.kind==='explainer'){showExplainer(d);return;}
  status('Loading '+number.format(d.row_count)+' result rows…');history.replaceState(null,'','#dataset='+encodeURIComponent(d.id)+'&mode='+state.mode);
  try{
   let rows=cache.get(d.id);
@@ -165,7 +169,16 @@ function drawPlot(){
 }
 $('cancel-plot').onclick=()=>{clearFigure();$('draw').disabled=!state.filtered.length;status('Figure discarded. The plotting engine remains loaded.');};
 $('manuscript-shortcut').onclick=()=>{state.mode='advanced';$('collection-search').value='';updateModeUI();changeSection('manuscript','manuscript/ptm_heatmap_lookup');};
-function showPCA(){
+function showExplainer(d){
+ state.rows=[];state.filtered=[];clearFigure();
+ $('pca-panel').hidden=true;$('diagnostic-panel').hidden=true;$('signature-detail').hidden=true;
+ document.querySelector('.filter-card').hidden=true;document.querySelector('.viewbar').hidden=true;
+ $('table-panel').hidden=true;$('plot-panel').hidden=true;$('explainer-panel').hidden=false;$('analysis-explanation').textContent='';
+ $('download').disabled=true;$('download-json').hidden=true;status('');
+ history.replaceState(null,'','#dataset='+encodeURIComponent(d.id)+'&mode='+state.mode);
+ mountExplainer($('explainer-panel'),d.id.split('/')[1]);
+}
+function showPCA(){$('explainer-panel').hidden=true;
  state.rows=[];state.filtered=[];clearFigure();$('pca-panel').hidden=false;$('diagnostic-panel').hidden=true;document.querySelector('.filter-card').hidden=true;document.querySelector('.viewbar').hidden=true;$('table-panel').hidden=true;$('plot-panel').hidden=true;$('download').disabled=true;status('');history.replaceState(null,'','#dataset=reference%2Fpca_original&mode=advanced');loadPCAImage();
 }
 function loadPCAImage(){const c=$('pca-compartment').value,m=$('pca-scaling').value;const url='./pca/'+c+'_'+m+'.png';$('pca-image').src=url;$('pca-image').alt=runLabel[c]+' PCA, '+(m==='raw'?'raw expression':'row-normalized expression');fade($('pca-panel'));}
@@ -282,5 +295,5 @@ $('dataset').onchange=loadDataset;document.querySelectorAll('[data-mode]').forEa
 for(const id of ['download-json','download','svg','png','pca-download','manifest-download','diagnostic-svg']) $(id).onclick=requestDownload;
 $('download-contact-close').onclick=()=> $('download-contact').close();
 for(const [i,[id,name]]of sections.entries()){const b=el('button',undefined,{role:'tab','aria-selected':id===state.section});b.dataset.section=id;b.append(el('span',String(i+1).padStart(2,'0'),{class:'num'}),el('span',name));b.onclick=()=>changeSection(id);$('sections').append(b);}
-(async()=>{try{state.catalog=await api('atlas_web_datasets',{select:'id,section,title,kind,description,run_key,row_count,provisional',order:'id.asc',limit:200});for(const d of state.catalog){if(d.kind==='signatures')d.title='Gene signature catalogue';}if(state.catalog.length)state.catalog.push({id:'reference/pca_original',section:'reference',title:'PCA by cell type',kind:'pca_original',row_count:0,run_key:'reference'},{id:'rna/compartment_diagnostics',section:'rna',title:'All RNA compartments: sampling overview',kind:'diagnostics',row_count:6,run_key:'overview'});if(!state.catalog.length){$('connection').textContent='Website ready · data release pending';$('dataset-title').textContent='Collections awaiting publication';status('The results have been prepared. Public access will open after the lab approves the data release.');$('search').disabled=true;$('reset').disabled=true;return;}$('connection').textContent=state.catalog.length+' collections · connected to the research data';const p=new URLSearchParams(location.hash.slice(1));const d=state.catalog.find(d=>d.id===p.get('dataset'));state.mode=['biology','reliability','advanced'].includes(p.get('mode'))?p.get('mode'):(d&&d.kind!=='effects'?'advanced':'biology');syncRunControls(d);updateModeUI();changeSection(d?.section||'rna',d?.id||'immune_coarse/effects');}catch(e){$('connection').textContent='Connection unavailable';$('dataset-title').textContent='Results temporarily unavailable';status(e.message,true);}})();
+(async()=>{try{state.catalog=await api('atlas_web_datasets',{select:'id,section,title,kind,description,run_key,row_count,provisional',order:'id.asc',limit:200});state.catalog.push(...EXPLAINERS.map(e=>({id:'equations/'+e.id,section:'equations',title:e.title,kind:'explainer',description:e.blurb,run_key:'explainer',row_count:0})));for(const d of state.catalog){if(d.kind==='signatures')d.title='Gene signature catalogue';}if(state.catalog.length)state.catalog.push({id:'reference/pca_original',section:'reference',title:'PCA by cell type',kind:'pca_original',row_count:0,run_key:'reference'},{id:'rna/compartment_diagnostics',section:'rna',title:'All RNA compartments: sampling overview',kind:'diagnostics',row_count:6,run_key:'overview'});if(!state.catalog.length){$('connection').textContent='Website ready · data release pending';$('dataset-title').textContent='Collections awaiting publication';status('The results have been prepared. Public access will open after the lab approves the data release.');$('search').disabled=true;$('reset').disabled=true;return;}$('connection').textContent=state.catalog.length+' collections · connected to the research data';const p=new URLSearchParams(location.hash.slice(1));const d=state.catalog.find(d=>d.id===p.get('dataset'));state.mode=['biology','reliability','advanced'].includes(p.get('mode'))?p.get('mode'):(d&&d.kind!=='effects'?'advanced':'biology');syncRunControls(d);updateModeUI();changeSection(d?.section||'rna',d?.id||'immune_coarse/effects');}catch(e){$('connection').textContent='Connection unavailable';$('dataset-title').textContent='Results temporarily unavailable';status(e.message,true);}})();
 

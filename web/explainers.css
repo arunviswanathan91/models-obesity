@@ -1,0 +1,52 @@
+/* Equation explainers. Append to style.css. Uses the site's existing tokens. */
+#explainer-panel{padding-top:4px}
+.xp-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.xp-tabs button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:7px 14px;font-size:13px}
+.xp-tabs button:hover{border-color:var(--teal);color:var(--teal)}
+.xp-tabs button[aria-selected=true]{background:var(--soft);border-color:var(--teal);color:var(--teal);font-weight:600}
+
+.xp-head{margin-bottom:16px}
+.xp-ref{margin:0;font-size:13px;color:var(--teal);font-weight:600}
+.xp-eqmain{margin:6px 0 8px;font-size:19px;letter-spacing:-.2px}
+.xp-blurb{margin:0;color:#50565c;font-size:14px;line-height:1.7;max-width:1000px}
+
+/* Sliders sit beside the figure, not in a separate panel. */
+.xp-stage{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,250px);gap:22px;align-items:start;
+  border:1px solid var(--line);border-radius:8px;padding:16px;background:#fcfdfd}
+.xp-figure{min-width:0}
+.xp-figure svg{width:100%;height:auto;display:block}
+.xp-live{margin:0 0 10px;font-size:15px;padding:8px 12px;background:var(--soft);border-radius:6px;
+  border-left:3px solid var(--teal);overflow-wrap:anywhere}
+.xp-live b{color:var(--teal)}
+
+.xp-controls{display:grid;gap:15px;align-content:start;min-width:0}
+.xp-ctrl-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.xp-ctrl label{font-size:12.5px;font-weight:600;margin:0}
+.xp-val{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.xp-ctrl input[type=range]{width:100%;margin:7px 0 2px;display:block}
+.xp-hint{display:block;font-size:11.5px;color:var(--grey);line-height:1.5}
+
+.xp-presets{display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid var(--line);padding-top:12px}
+.xp-presets-label{width:100%;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--grey);text-transform:uppercase}
+.xp-pre{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:5px;padding:5px 9px;font-size:12px}
+.xp-pre:hover{border-color:var(--teal);color:var(--teal)}
+.xp-reset{justify-self:start;padding:0}
+
+.xp-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin-top:14px}
+.xp-card{border:1px solid var(--line);border-radius:6px;padding:11px 13px;background:#fff;min-width:0}
+.xp-card.lead{border-left:3px solid var(--teal)}
+.xp-card h4{margin:0 0 5px;font-size:11.5px;font-weight:600;color:var(--grey);line-height:1.3}
+.xp-card strong{display:block;font-size:21px;font-weight:500;font-variant-numeric:tabular-nums}
+.xp-card span{font-size:11.5px;color:var(--grey)}
+
+.xp-verdict{margin-top:14px;border-left:3px solid var(--magenta);background:#fff5f8;padding:11px 15px;font-size:13.5px;line-height:1.7}
+.xp-verdict strong{font-weight:700}
+.xp-note{margin-top:16px;font-size:12.5px;color:var(--grey);line-height:1.75;max-width:1000px;
+  border-top:1px solid var(--line);padding-top:12px}
+
+@media(max-width:860px){
+  .xp-stage{grid-template-columns:1fr;gap:16px}
+  .xp-controls{grid-template-columns:1fr 1fr;gap:14px 18px}
+  .xp-presets,.xp-reset{grid-column:1/-1}
+}
+@media(max-width:560px){.xp-controls{grid-template-columns:1fr}.xp-eqmain{font-size:17px}}
