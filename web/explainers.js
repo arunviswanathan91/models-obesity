@@ -1280,6 +1280,23 @@ const support = {
   }
 };
 
+
+/* ---------- data provenance, shown beside every figure ---------- */
+const PROVENANCE = {
+  'screen':        ['published', 'Published counts', 'Funnel, transition matrix and gene counts are the study\u2019s own figures.'],
+  'widening':      ['published', 'Published estimates', 'All 914 cellular slopes and their HDIs, with the correction applied live.'],
+  'support':       ['published', 'Published metrics', 'Allocated-read totals and gate tiers per deconvolution component.'],
+  'pooling':       ['published', 'Published estimates', 'Forest runs on published posterior means and HDIs.'],
+  'conditioning':  ['mixed', 'Published estimates on request', 'Opens on the paper\u2019s calibration scenarios. Load a real feature from the selector above.'],
+  'contrast':      ['mixed', 'Published estimates on request', 'Opens on illustrative values. Load a real programme from the selector above.'],
+  'simulation':    ['mixed', 'Published metrics, simulated draw', 'The dataset is generated live from the notebook\u2019s model; the RMSE and coverage bars are published.'],
+  'student-t':     ['exact', 'Exact formula', 'The weight curve is the likelihood itself, not a data summary.'],
+  'cellular':      ['illustrative', 'Simulated cohort', 'Patient-level data is controlled access, so the 127 patients here are generated from the study\u2019s cohort structure.'],
+  'patient-effect':['illustrative', 'Simulated cohort', 'Patient-level data is controlled access; the orthogonality shown is exact arithmetic on generated patients.'],
+  'plex':          ['illustrative', 'Simulated cohort', 'Patient-level data is controlled access, so plex membership and scores here are generated.'],
+  'heatmap':       ['illustrative', 'Illustrative grid', 'The published cell-type by signature grid is too sparse to fill; shrinkage shown is the exact conjugate result.']
+};
+
 export const EXPLAINERS = [cellular, pooling, heatmap, support, patient, plex, contrast, conditioning, funnel, widening, studentT, simulation];
 
 /* ---------- mount ---------- */
@@ -1302,6 +1319,12 @@ export function mountExplainer(root, id) {
   root.append(realWrap);
   const stage = h('div', undefined, { class: 'xp-stage' });
   const figure = h('div', undefined, { class: 'xp-figure' });
+  const pv = PROVENANCE[spec.id];
+  if (pv) {
+    const tag = h('div', undefined, { class: 'xp-prov xp-prov-' + pv[0] });
+    tag.append(h('strong', pv[1]), h('span', pv[2]));
+    figure.append(tag);
+  }
   const live = h('p', undefined, { class: 'xp-live' });
   const svg = s('svg', { role: 'img', 'aria-label': spec.title + ' diagram' });
   figure.append(live, svg);
