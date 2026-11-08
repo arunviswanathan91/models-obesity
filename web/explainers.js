@@ -126,6 +126,20 @@ const conditioning = {
     { label: 'Heavy-tailed', v: { bm: 0.397, bp: 0.25, rho: 0.7, ratio: 1.125, nu: 3 } },
     { label: 'Sign reversal', v: { bm: 0.20, bp: -0.50, rho: 0.70, ratio: 1.60, nu: 8 } }
   ],
+  usesData: true,
+  real() {
+    if (!DATA) return null;
+    const groups = {};
+    for (const r of DATA.ptm.rows) {
+      const [gene, assay, tr, cand, bm, bp, cond, kappa, rho] = r;
+      const ratio = rho ? kappa / rho : 1;
+      (groups[tr] = groups[tr] || []).push({
+        label: `${gene} ${assay}  \u03B2M ${minus(bm)} \u2192 ${minus(cond)}${cand ? '  \u2605' : ''}`,
+        v: { bm, bp, rho, ratio: Math.abs(ratio) < 0.2 ? 0.2 : Math.min(3, Math.abs(ratio)), nu: 8 }
+      });
+    }
+    return Object.entries(groups).map(([g, items]) => ({ group: g, items }));
+  },
   init() { const z1 = normals(170, 20260109), z2 = normals(170, 91823); return { z1, z2 }; },
   draw(svg, v, mem) {
     const k = v.rho * v.ratio, cond = v.bm - k * v.bp, naive = v.bm - v.bp;
@@ -213,9 +227,15 @@ const pooling = {
     { label: 'Heavy pooling', v: { tau: 0.05, cov: 0.846, show: 1 } },
     { label: 'Worse undercoverage', v: { tau: 0.30, cov: 0.75, show: 1 } }
   ],
+  usesData: true,
   init() { return {}; },
   draw(svg, v) {
-    const rows = DEMO_FOREST, mean = precisionMean(rows), f = widenFactor(v.cov);
+    const realRows = DATA && DATA.widening && DATA.widening.rows.length
+      ? DATA.widening.rows.slice(0, 12).map(r => ({
+          label: r[0] + ' · ' + r[1].replace(/_/g, ' '),
+          est: r[2], se: (r[4] - r[3]) / 3.9199 }))
+      : null;
+    const rows = realRows || DEMO_FOREST, mean = precisionMean(rows), f = widenFactor(v.cov);
     const n = rows.length, rowH = 21, top = 30, H = top + n * rowH + 44;
     svg.setAttribute('viewBox', `0 0 460 ${H}`);
     svg.replaceChildren();
@@ -756,6 +776,14 @@ const contrast = {
     { label: 'Independent layers', v: { br: 0.30, bp: 0.10, rho: 0.03 } },
     { label: 'Opposed', v: { br: 0.30, bp: -0.25, rho: 0.60 } }
   ],
+  usesData: true,
+  real() {
+    if (!DATA) return null;
+    return [{ group: 'published programmes, by |\u0394|', items: DATA.rnaprot.rows.map(r => ({
+      label: `${r[0].replace('SIG_', '')}  \u0394 ${minus(r[3])}  \u03C1 ${minus(r[4])}`,
+      v: { br: r[1], bp: r[2], rho: r[4] }
+    })) }];
+  },
   init() {
     const c = cohort([52, 57, 18], 0.2, 20260926);
     const r = lcg(606060);
@@ -844,6 +872,21 @@ const simulation = {
     { label: 'Obese 10', v: { shape: 1, effect: 0.20, counts: 3, rho: 0, df: 8, err: 0, conf: 0.2 } },
     { label: 'Confounded', v: { shape: 1, effect: 0.20, counts: 1, rho: 0, df: 8, err: 0, conf: 0.65 } }
   ],
+  usesData: true,
+  scenarioKey(v) {
+    const shape = SHAPES[Math.round(v.shape)];
+    if (shape === 'null') return 'null';
+    if (Math.round(v.err) === 2) return 'contaminated_0.20';
+    if (v.df <= 3.2) return 'heavy_tails';
+    if (v.rho >= 0.55) return 'correlated_0.20';
+    const ci = Math.round(v.counts);
+    if (ci === 0) return 'patients_64';
+    if (ci === 2) return 'patients_254';
+    if (ci === 3) return 'obese_10';
+    if (shape === 'threshold') return 'threshold_0.20';
+    if (shape === 'plateau') return 'plateau_0.20';
+    return 'linear_' + (v.effect <= 0.125 ? '0.10' : v.effect >= 0.35 ? '0.50' : '0.20');
+  },
   init() { return {}; },
   draw(svg, v) {
     const counts = COUNTS[COUNT_KEYS[Math.round(v.counts)]];
@@ -911,25 +954,333 @@ const simulation = {
     svg.append(k4);
 
     const atten = beta ? contCoef / beta : 0;
+    // published operating characteristics for the resolved scenario
+    const skey = simulation.scenarioKey(v);
+    let real = null;
+    if (DATA && DATA.simulation) {
+      const B = DATA.simulation.rows.find(r => r[0] === skey && r[2] === 'bmi' && r[3] === 'B');
+      const O = DATA.simulation.rows.find(r => r[0] === skey && r[2] === 'bmi' && r[3] === 'O');
+      if (B && O) real = { bRmse: B[4], bCov: B[5], oRmse: O[4], oCov: O[5] };
+    }
+    if (real) {
+      svg.setAttribute('viewBox', '0 0 360 300');
+      const y0 = 262, SC = 900;
+      const k = s('text', { x: 46, y: y0 - 4, fill: INK, 'font-size': 10, 'font-weight': 700 });
+      k.textContent = 'published simulation: ' + skey; svg.append(k);
+      svg.append(s('rect', { x: 46, y: y0, width: Math.max(2, real.bRmse * SC), height: 7, rx: 2, fill: TEAL }));
+      const t1 = s('text', { x: 46 + Math.max(2, real.bRmse * SC) + 5, y: y0 + 7, fill: GREY, 'font-size': 9.5 });
+      t1.textContent = 'Bayes RMSE ' + real.bRmse.toFixed(3) + ', coverage ' + (real.bCov * 100).toFixed(1) + '%';
+      svg.append(t1);
+      svg.append(s('rect', { x: 46, y: y0 + 10, width: Math.max(2, real.oRmse * SC), height: 7, rx: 2, fill: BLUE }));
+      const t2 = s('text', { x: 46 + Math.max(2, real.oRmse * SC) + 5, y: y0 + 17, fill: GREY, 'font-size': 9.5 });
+      t2.textContent = 'OLS RMSE ' + real.oRmse.toFixed(3) + ', coverage ' + (real.oCov * 100).toFixed(1) + '%';
+      svg.append(t2);
+    }
+
     let verdict;
     if (shape === 'null') verdict = ['Nothing to find', 'Both targets are zero. This is the condition that measures the false-discovery proportion, not power.'];
     else if (shape === 'linear') verdict = ['Targets agree', 'With a genuinely linear effect the continuous projection recovers β directly, and the categorical contrasts describe the same line sampled at three points.'];
     else verdict = ['The targets differ, and that is the point',
       `A ${shape} effect projected onto a linear BMI term gives ${minus(contCoef)} against a generating amplitude of ${minus(beta)} — attenuated to ${(atten * 100).toFixed(0)}%. Coverage for the continuous fit is judged against that projection, not against the amplitude, which is why a continuous fit can stay nominally calibrated while detecting the step less often than the categorical contrasts do.`];
+    if (real) {
+      verdict = [real.bCov < 0.90 ? 'Better estimates, worse intervals' : 'Published result for this scenario',
+        `In the published simulation this scenario gave Bayes RMSE ${real.bRmse.toFixed(3)} against OLS ${real.oRmse.toFixed(3)}, with coverage ${(real.bCov * 100).toFixed(1)}% against ${(real.oCov * 100).toFixed(1)}%. ` +
+        (real.bCov < 0.90
+          ? 'The pooled model estimates more accurately and still undercovers. The two criteria come apart, which is the whole reason both are reported.'
+          : 'Accuracy and calibration agree in this scenario.')];
+    }
     return {
       eq: `continuous target <b>${minus(contCoef)}</b> · overweight ${minus(ow)} · obese ${minus(ob)} · obese−overweight ${minus(ob - ow)}`,
       cards: [
         ['continuous target', minus(contCoef), 'projection of H', true],
         ['obese − normal', minus(ob), 'categorical'],
         ['obese − overweight', minus(ob - ow), 'derived in draws'],
-        ['generating βⱼ', minus(beta), shape === 'linear' ? 'recovered directly' : 'attenuated to ' + (atten * 100).toFixed(0) + '%']
+        real ? ['Bayes vs OLS RMSE', real.bRmse.toFixed(3) + ' / ' + real.oRmse.toFixed(3), 'published']
+             : ['generating βⱼ', minus(beta), shape === 'linear' ? 'recovered directly' : 'attenuated to ' + (atten * 100).toFixed(0) + '%']
       ],
       verdict
     };
   }
 };
 
-export const EXPLAINERS = [cellular, pooling, heatmap, patient, plex, contrast, conditioning, studentT, simulation];
+/* ---------- published data ---------- */
+let DATA = null, dataPromise = null;
+export function loadExplainerData() {
+  if (!dataPromise) {
+    dataPromise = fetch(new URL('./explainer-data.json', import.meta.url))
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { DATA = d; return d; })
+      .catch(() => null);
+  }
+  return dataPromise;
+}
+const DATASRC = 'Published posterior summaries from the Atlas database.';
+
+/* ---------- widget: what the screen intended and what it returned ---------- */
+const funnel = {
+  id: 'screen',
+  title: 'What the screen returned',
+  eq: 'marginal call → conditional call',
+  ref: 'PTM screen, Figure 6',
+  blurb: 'The screen set out to find modified forms associated with BMI. Conditioning on parent protein then rebuilt the candidate list almost from scratch. These are the published counts: how many features entered, how many survived each gate, and how the marginal and conditional calls disagree.',
+  note: 'A feature qualified with finite protein and PTM values for at least 102 patients across at least 16 plexes, nonzero variance in both responses and an available parent protein. Candidates require a numerically adequate primary fit and a conditional 95% HDI excluding zero. No hierarchy pools features within genes, signatures or pathways, and there is no multiplicity control across the screen. ' + DATASRC,
+  usesData: true,
+  params: [
+    { k: 'assay', label: 'assay', min: 0, max: 1, step: 1, value: 1, colour: TEAL, fmt: x => (x ? 'glyco' : 'phospho'), hint: 'Phosphosites or glycopeptides.' },
+    { k: 'logx',  label: 'funnel scale', min: 0, max: 1, step: 1, value: 1, colour: GREY, fmt: x => (x ? 'log' : 'linear'), hint: 'The first stage is three orders of magnitude above the last.' }
+  ],
+  init() { return {}; },
+  draw(svg, v) {
+    const assay = v.assay ? 'glyco' : 'phospho';
+    svg.setAttribute('viewBox', '0 0 360 290');
+    svg.replaceChildren();
+    if (!DATA) {
+      const t = s('text', { x: 180, y: 140, 'text-anchor': 'middle', fill: GREY, 'font-size': 12 });
+      t.textContent = 'Loading published counts…'; svg.append(t);
+      return { eq: 'Loading…', cards: [], verdict: ['Loading', 'Fetching the published screen counts.'] };
+    }
+    const col = assay === 'glyco' ? 2 : 1;
+    const stages = DATA.funnel.rows.map(r => [r[0], r[col]]);
+    const genes = DATA.funnel.genes[assay];
+    const tr = DATA.transitions.rows.filter(r => r[0] === assay);
+    const get = (m, c) => (tr.find(r => r[1] === m && r[2] === c) || [0, 0, 0, 0])[3];
+    const dirs = ['negative', 'uncertain', 'positive'];
+    const marginalCalled = get('negative','negative') + get('negative','uncertain') + get('positive','positive') + get('positive','uncertain');
+    const conditionalCalled = get('negative','negative') + get('positive','positive') + get('uncertain','negative') + get('uncertain','positive');
+    const kept = get('negative','negative') + get('positive','positive');
+    const lost = get('negative','uncertain') + get('positive','uncertain');
+    const gained = get('uncertain','negative') + get('uncertain','positive');
+
+    // funnel bars
+    const L = 150, R = 348, T = 20, rowH = 23;
+    const max = stages[0][1];
+    const w = n => {
+      if (!v.logx) return (n / max) * (R - L);
+      return (Math.log10(Math.max(1, n)) / Math.log10(max)) * (R - L);
+    };
+    stages.forEach(([name, n], i) => {
+      const y = T + i * rowH;
+      svg.append(s('rect', { x: L, y, width: Math.max(2, w(n)), height: rowH - 7, rx: 2,
+        fill: i === stages.length - 1 ? TEAL : BLUE, opacity: i === stages.length - 1 ? 0.95 : 0.3 + 0.12 * i }));
+      const lab = s('text', { x: L - 7, y: y + rowH / 2, 'text-anchor': 'end', fill: INK, 'font-size': 10.5 });
+      lab.textContent = name; svg.append(lab);
+      const num = s('text', { x: L + Math.max(2, w(n)) + 6, y: y + rowH / 2, fill: GREY, 'font-size': 10.5 });
+      num.textContent = n.toLocaleString('en'); svg.append(num);
+    });
+    const gl = s('text', { x: L, y: T + stages.length * rowH + 10, fill: GREY, 'font-size': 10.5 });
+    gl.textContent = `${genes.candidate} candidate genes of ${genes.eligible} eligible`; svg.append(gl);
+
+    // transition matrix
+    const MT = T + stages.length * rowH + 26, cell = 44, MX = 150;
+    const head = s('text', { x: MX, y: MT - 6, fill: GREY, 'font-size': 10.5 });
+    head.textContent = 'conditional call →'; svg.append(head);
+    const side = s('text', { x: 16, y: MT + cell * 1.5, fill: GREY, 'font-size': 10.5,
+      transform: `rotate(-90 16 ${MT + cell * 1.5})` });
+    side.textContent = '← marginal call'; svg.append(side);
+    dirs.forEach((c, j) => {
+      const t = s('text', { x: MX + j * cell + cell / 2, y: MT + 9, 'text-anchor': 'middle', fill: GREY, 'font-size': 10 });
+      t.textContent = c.slice(0, 4); svg.append(t);
+    });
+    dirs.forEach((m, i) => {
+      const t = s('text', { x: MX - 7, y: MT + 16 + i * cell + cell / 2, 'text-anchor': 'end', fill: GREY, 'font-size': 10 });
+      t.textContent = m.slice(0, 4); svg.append(t);
+      dirs.forEach((c, j) => {
+        const n = get(m, c), x = MX + j * cell, y = MT + 16 + i * cell;
+        const diag = m === c, call = c !== 'uncertain';
+        const fill = n === 0 ? 'transparent'
+          : diag && call ? 'rgba(14,124,123,0.75)'
+          : call ? 'rgba(216,27,96,0.55)'
+          : m !== 'uncertain' ? 'rgba(44,90,160,0.45)' : 'rgba(0,0,0,0.05)';
+        svg.append(s('rect', { x, y, width: cell - 3, height: cell - 3, rx: 3, fill,
+          stroke: LINE, 'stroke-width': 1 }));
+        const t2 = s('text', { x: x + (cell - 3) / 2, y: y + (cell - 3) / 2 + 4, 'text-anchor': 'middle',
+          'font-size': 11, 'font-weight': call || diag ? 700 : 400,
+          fill: n && (call || (diag && call)) ? '#fff' : INK });
+        t2.textContent = n ? String(n) : '·'; svg.append(t2);
+      });
+    });
+    const key = s('text', { x: MX, y: MT + 16 + 3 * cell + 14, fill: GREY, 'font-size': 10 });
+    key.textContent = 'teal kept · blue lost · pink gained'; svg.append(key);
+
+    return {
+      eq: `marginal screen would call <b>${marginalCalled}</b> · conditional screen calls <b>${conditionalCalled}</b> · only ${kept} are the same features`,
+      cards: [
+        ['kept', String(kept), 'called both ways', true],
+        ['lost to conditioning', String(lost), 'tracked parent protein'],
+        ['gained by conditioning', String(gained), 'hidden marginally'],
+        ['turnover', Math.round(100 * (1 - kept / Math.max(1, conditionalCalled))) + '%', 'of the final list is new']
+      ],
+      verdict: ['The final list is not the list we set out with',
+        `Of ${marginalCalled} ${assay} features a marginal screen would have called, ${kept} survive conditioning and ${lost} drop out. A further ${gained} appear that showed nothing marginally. ` +
+        (assay === 'phospho'
+          ? 'For phosphosites that is near-total turnover: the published 14 candidates share only 6 features with what the marginal screen would have reported.'
+          : 'For glycopeptides 39 of the 67 published candidates were already marginal calls, so the overlap is larger but still partial.')]
+    };
+  }
+};
+
+/* ---------- widget: interval widening, and which signals survive ---------- */
+const widening = {
+  id: 'widening',
+  title: 'Which associations survive widening',
+  eq: 'factor = z<sub>0.975</sub> / z<sub>(1+c)/2</sub>, survives if |β| > factor × (distance to the zero-side bound)',
+  ref: 'Decision rule, simulation coverage',
+  blurb: 'Simulated residual correlation among signatures pushed coverage of the nominal 95% intervals down to about 84.6%, so named associations were re-checked after widening each interval by 1.37. This applies that correction to every published cellular slope and shows exactly which ones hold.',
+  note: 'Signatures within a cell type share genes, so their residuals are correlated and the intervals are narrower than their nominal level. The widening is an approximate, illustrative correction, not a re-fit. Applied across all three compartments. ' + DATASRC,
+  usesData: true,
+  params: [
+    { k: 'cov',  label: 'achieved coverage', min: 0.70, max: 0.95, step: 0.002, value: 0.846, colour: MAGENTA, fmt: x => (x * 100).toFixed(1) + '%', hint: 'Simulation gave 84.6% for the correlated scenario. 95% means no correction.' },
+    { k: 'show', label: 'rows shown', min: 10, max: 40, step: 1, value: 22, colour: GREY, fmt: x => String(Math.round(x)), hint: 'Highest-ranked associations by margin.' }
+  ],
+  presets: [
+    { label: 'Paper: 84.6%', v: { cov: 0.846, show: 22 } },
+    { label: 'No correction', v: { cov: 0.95, show: 22 } },
+    { label: 'Nominal 93%', v: { cov: 0.93, show: 22 } },
+    { label: 'Severe 75%', v: { cov: 0.75, show: 22 } }
+  ],
+  init() { return {}; },
+  draw(svg, v) {
+    if (!DATA) {
+      svg.setAttribute('viewBox', '0 0 460 120'); svg.replaceChildren();
+      const t = s('text', { x: 230, y: 60, 'text-anchor': 'middle', fill: GREY, 'font-size': 12 });
+      t.textContent = 'Loading published estimates…'; svg.append(t);
+      return { eq: 'Loading…', cards: [], verdict: ['Loading', 'Fetching published cellular slopes.'] };
+    }
+    const W = DATA.widening, f = widenFactor(v.cov);
+    const n = Math.round(v.show);
+    const rows = W.rows.slice(0, n);
+    const survive = W.rows.filter(r => r[5] > f).length;
+    const extra = W.excludes_zero - W.rows.length; // below the stored cut, never survives f>1.20
+    const totalSurvive = f >= 1.2 ? survive : survive + extra;
+
+    const rowH = 19, top = 26, H = top + rows.length * rowH + 38;
+    svg.setAttribute('viewBox', `0 0 470 ${H}`);
+    svg.replaceChildren();
+    const lim = 0.28, L = 232, R = 458;
+    const X = b => L + (clamp(b, -lim, lim) / lim) * ((R - L) / 2) + (R - L) / 2;
+    svg.append(s('line', { x1: X(0), x2: X(0), y1: top - 8, y2: top + rows.length * rowH, stroke: INK }));
+    for (const t of [-0.2, 0.2]) {
+      svg.append(s('line', { x1: X(t), x2: X(t), y1: top - 8, y2: top + rows.length * rowH, stroke: LINE, 'stroke-dasharray': '3 3' }));
+      const tl = s('text', { x: X(t), y: top + rows.length * rowH + 15, 'text-anchor': 'middle', fill: GREY, 'font-size': 10.5 });
+      tl.textContent = minus(t); svg.append(tl);
+    }
+    rows.forEach((r, i) => {
+      const [ct, sig, est, lo, hi, fmax] = r;
+      const y = top + i * rowH + rowH / 2;
+      const ok = fmax > f;
+      const col = est >= 0 ? MAGENTA : BLUE;
+      const nm = s('text', { x: 226, y: y + 4, 'text-anchor': 'end', fill: ok ? INK : GREY, 'font-size': 10.5 });
+      nm.textContent = ct + ' · ' + sig.replace(/_/g, ' ');
+      if (!ok) nm.setAttribute('opacity', '0.55');
+      svg.append(nm);
+      const wlo = est - f * (est - lo), whi = est + f * (hi - est);
+      svg.append(s('line', { x1: X(wlo), x2: X(whi), y1: y, y2: y, stroke: ok ? col : GREY, 'stroke-width': 1, opacity: 0.4 }));
+      svg.append(s('line', { x1: X(lo), x2: X(hi), y1: y, y2: y, stroke: col, 'stroke-width': 2.2, opacity: ok ? 1 : 0.45 }));
+      svg.append(s('circle', { cx: X(est), cy: y, r: 3.2, fill: col, opacity: ok ? 1 : 0.45 }));
+      if (!ok) svg.append(s('circle', { cx: X(0), cy: y, r: 2.6, fill: 'none', stroke: GREY, 'stroke-width': 1.4 }));
+    });
+    const cap = s('text', { x: (L + R) / 2, y: H - 8, 'text-anchor': 'middle', fill: GREY, 'font-size': 10.5 });
+    cap.textContent = 'BMI slope per 5 kg/m², pale bar = widened interval'; svg.append(cap);
+
+    return {
+      eq: `coverage ${(v.cov * 100).toFixed(1)}% → widening ×<b>${f.toFixed(2)}</b> · <b>${totalSurvive}</b> of ${W.excludes_zero} associations still exclude zero`,
+      cards: [
+        ['exclude zero at 95%', String(W.excludes_zero), 'of ' + W.total + ' signatures'],
+        ['survive widening', String(totalSurvive), '×' + f.toFixed(2), true],
+        ['lost', String(W.excludes_zero - totalSurvive), Math.round(100 * (1 - totalSurvive / W.excludes_zero)) + '% of calls'],
+        ['widening factor', '×' + f.toFixed(2), 'z ratio']
+      ],
+      verdict: f <= 1.01
+        ? ['No correction applied', `At nominal coverage all ${W.excludes_zero} associations stand. The simulation says this is optimistic, because correlated residuals among overlapping signatures make these intervals narrower than 95%.`]
+        : [`${totalSurvive} of ${W.excludes_zero} hold`,
+           `At the paper's 84.6% coverage the correction is ×1.37 and 27 associations survive — the TAM iron, lipid, lysosomal and repair programmes, CD4+ helper and costimulatory function, and CD8+ costimulation. CD8+ metabolic programming sits at 1.369, just under the threshold, which is why the manuscript calls it sensitive to uncertainty assumptions. Cytotoxicity never excluded zero at any level.`]
+    };
+  }
+};
+
+/* ---------- widget: measurement support ---------- */
+const support = {
+  id: 'support',
+  title: 'Measurement support and what it costs',
+  eq: 'profiles with fewer than 1,000 allocated reads were dropped',
+  ref: 'Read-depth sensitivity, component eligibility',
+  blurb: 'Deconvolution assigns each bulk sample’s reads across cell types. For some types almost nothing is assigned in some patients, and a score built on 19 reads is noise. Each point is one component: the horizontal axis is its median allocated reads, the bar runs down to the worst patient it had.',
+  note: 'The exclusion rule does not use BMI, but it changes which patients represent each cell type, so estimates and interval widths were compared before and after. Those before-and-after estimates are not published in the Atlas; what is published, and shown here, are the support metrics that drove the gate. strict_qc_clear passes the strict gate; borderline_supported fails it but is retained by the tiered gate used for the primary analysis; exploratory_zero_heavy fails both. ' + DATASRC,
+  usesData: true,
+  params: [
+    { k: 'cutoff', label: 'read cutoff', min: 1, max: 6, step: 0.1, value: 3, colour: MAGENTA, fmt: x => Math.round(Math.pow(10, x)).toLocaleString('en'), hint: 'The analysis used 1,000 reads per patient-by-cell-type profile.' },
+    { k: 'comp',   label: 'compartment', min: 0, max: 2, step: 1, value: 0, colour: TEAL, fmt: x => ['coarse immune', 'fine immune', 'non-immune'][x], hint: 'Three separate deconvolutions of the same bulk data.' }
+  ],
+  presets: [
+    { label: 'Coarse immune', v: { cutoff: 3, comp: 0 } },
+    { label: 'Fine immune', v: { cutoff: 3, comp: 1 } },
+    { label: 'Non-immune', v: { cutoff: 3, comp: 2 } },
+    { label: 'Stricter: 10,000', v: { cutoff: 4, comp: 0 } }
+  ],
+  init() { return {}; },
+  draw(svg, v) {
+    if (!DATA) {
+      svg.setAttribute('viewBox', '0 0 420 120'); svg.replaceChildren();
+      const t = s('text', { x: 210, y: 60, 'text-anchor': 'middle', fill: GREY, 'font-size': 12 });
+      t.textContent = 'Loading support metrics…'; svg.append(t);
+      return { eq: 'Loading…', cards: [], verdict: ['Loading', 'Fetching component support metrics.'] };
+    }
+    const comp = ['immune_coarse', 'immune_fine', 'non_immune'][Math.round(v.comp)];
+    const rows = DATA.support.rows.filter(r => r[1] === comp)
+      .slice().sort((a, b) => a[3] - b[3]);
+    const cut = Math.pow(10, v.cutoff);
+    const rowH = 17, top = 24, H = top + rows.length * rowH + 44;
+    svg.setAttribute('viewBox', `0 0 470 ${H}`);
+    svg.replaceChildren();
+    const L = 212, R = 452;
+    const X = n => L + (Math.log10(Math.max(1, n)) / 7.2) * (R - L);
+    for (const d of [1, 3, 5, 7]) {
+      svg.append(s('line', { x1: X(Math.pow(10, d)), x2: X(Math.pow(10, d)), y1: top - 6, y2: top + rows.length * rowH, stroke: LINE, 'stroke-dasharray': '3 3' }));
+      const t = s('text', { x: X(Math.pow(10, d)), y: top + rows.length * rowH + 15, 'text-anchor': 'middle', fill: GREY, 'font-size': 10 });
+      t.textContent = '10' + ['', '', '', '³', '', '⁵', '', '⁷'][d]; svg.append(t);
+    }
+    svg.append(s('line', { x1: X(cut), x2: X(cut), y1: top - 10, y2: top + rows.length * rowH, stroke: MAGENTA, 'stroke-width': 1.8 }));
+    const cl = s('text', { x: X(cut), y: top - 14, 'text-anchor': 'middle', fill: MAGENTA, 'font-size': 10.5, 'font-weight': 700 });
+    cl.textContent = 'cutoff'; svg.append(cl);
+
+    const tierCol = { strict_qc_clear: TEAL, borderline_supported: '#B07A12', exploratory_zero_heavy: MAGENTA };
+    let below = 0, borderline = 0;
+    rows.forEach((r, i) => {
+      const [name, , tier, med, min] = r;
+      const y = top + i * rowH + rowH / 2;
+      if (min < cut) below++;
+      if (tier === 'borderline_supported') borderline++;
+      const nm = s('text', { x: 206, y: y + 3.5, 'text-anchor': 'end', fill: INK, 'font-size': 10 });
+      nm.textContent = name.replace(/_/g, ' ').toLowerCase(); svg.append(nm);
+      svg.append(s('line', { x1: X(min), x2: X(med), y1: y, y2: y, stroke: tierCol[tier], 'stroke-width': 1.6, opacity: 0.45 }));
+      svg.append(s('circle', { cx: X(min), cy: y, r: 2.4, fill: 'none', stroke: tierCol[tier], 'stroke-width': 1.4 }));
+      svg.append(s('circle', { cx: X(med), cy: y, r: 3.4, fill: tierCol[tier] }));
+    });
+    const xl = s('text', { x: (L + R) / 2, y: H - 10, 'text-anchor': 'middle', fill: GREY, 'font-size': 10.5 });
+    xl.textContent = 'allocated reads: open circle = worst patient, filled = median'; svg.append(xl);
+
+    const kept = rows.filter(r => r[9]).length;
+    return {
+      eq: `${comp.replace('_', ' ')}: <b>${kept}</b> of ${rows.length} components retained · ${below} have at least one patient below the cutoff`,
+      cards: [
+        ['components', String(rows.length), 'in this compartment'],
+        ['retained', String(kept), 'tiered primary gate', true],
+        ['borderline', String(borderline), 'fail strict, kept tiered'],
+        ['with a patient below cutoff', String(below), 'profiles excluded']
+      ],
+      verdict: comp === 'immune_coarse'
+        ? ['The two cell types carrying the headline findings are the borderline ones',
+           'CD8+ T cells and CD4+ T cells both fail the strict gate and are retained only by the tiered one. Their median allocation looks healthy — 189,354 and 548,097 reads — but their worst patients contribute 19 and 57. That is the asymmetry the cutoff exists to handle, and it is also why the CD8+ metabolic association is the one that moves when the uncertainty assumptions change.']
+        : comp === 'immune_fine'
+          ? ['Fine subsets mostly have nothing to measure',
+             'Seven fine T-cell subsets have median allocations in single digits and a median deconvolution fraction of zero. No modelling choice rescues a score built on four reads, so these are reported as exploratory and excluded from the primary analysis.']
+          : ['Most non-immune components fail both gates',
+             'Tumour epithelial, normal ductal, stellate and adipocyte components are well supported. Fibroblast subtypes, acinar, Schwann and islet components have median allocations under 20 reads, which is why the non-immune associations in the manuscript stay imprecise.']
+    };
+  }
+};
+
+export const EXPLAINERS = [cellular, pooling, heatmap, support, patient, plex, contrast, conditioning, funnel, widening, studentT, simulation];
 
 /* ---------- mount ---------- */
 export function mountExplainer(root, id) {
@@ -946,6 +1297,9 @@ export function mountExplainer(root, id) {
   head.append(eqMain, h('p', spec.blurb, { class: 'xp-blurb' }));
   root.append(head);
 
+  const realWrap = h('div', undefined, { class: 'xp-real' });
+  realWrap.hidden = true;
+  root.append(realWrap);
   const stage = h('div', undefined, { class: 'xp-stage' });
   const figure = h('div', undefined, { class: 'xp-figure' });
   const live = h('p', undefined, { class: 'xp-live' });
@@ -1015,6 +1369,34 @@ export function mountExplainer(root, id) {
     }
     verdict.replaceChildren(h('strong', out.verdict[0] + '. '), h('span', out.verdict[1]));
   }
+  function buildReal() {
+    if (!spec.real) return;
+    const groups = spec.real();
+    if (!groups || !groups.length) return;
+    realWrap.replaceChildren();
+    realWrap.append(h('label', 'Load a published estimate', { for: 'xp-real-' + spec.id }));
+    const sel = h('select', undefined, { id: 'xp-real-' + spec.id });
+    sel.append(h('option', 'illustrative values', { value: '' }));
+    const flat = [];
+    for (const g of groups) {
+      const og = document.createElement('optgroup');
+      og.label = g.group;
+      for (const it of g.items) {
+        og.append(h('option', it.label, { value: String(flat.length) }));
+        flat.push(it);
+      }
+      sel.append(og);
+    }
+    const badge = h('span', '', { class: 'xp-badge' });
+    sel.addEventListener('change', () => {
+      if (sel.value === '') { badge.textContent = ''; apply({}); return; }
+      badge.textContent = 'published';
+      apply(flat[+sel.value].v);
+    });
+    realWrap.append(sel, badge);
+    realWrap.hidden = false;
+  }
   update();
+  if (spec.usesData) loadExplainerData().then(() => { buildReal(); update(); });
   return update;
 }
