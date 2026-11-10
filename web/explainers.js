@@ -214,39 +214,41 @@ const pooling = {
   eq: 'β<sub>j</sub> ~ Normal(μ<sub>c(j)</sub>, τ<sup>2</sup>)',
   ref: 'Equations 4–5, decision rule',
   blurb: 'Signature slopes are shrunk towards their cell-type mean. Raise τ and the model trusts each signature on its own; lower it and weakly supported signatures are pulled in. The widening slider applies the paper’s correction for simulated undercoverage.',
-  note: 'An HDI excluding zero is directional support under the model, with no multiplicity control and no minimum effect size. Simulated residual correlation among signatures gave about 84.6% coverage, so named associations were re-checked after widening each interval by 1.960/1.426 ≈ 1.37. Values shown are illustrative.',
+  note: 'An HDI excluding zero is directional support under the model, with no multiplicity control and no minimum effect size. Simulated residual correlation among signatures gave about 84.6% coverage, so named associations were re-checked after widening each interval by 1.960/1.426 ≈ 1.37. Rows are 12 published slopes spread from the strongest to the weakest survivor; the noise multiplier is a what-if, because the published SEs are all small relative to τ and shrinkage is nearly invisible at ×1.',
   params: [
-    { k: 'tau',  label: 'τ between-signature SD', min: 0.02, max: 1.2, step: 0.01, value: 0.30, colour: TEAL, hint: 'Prior spread of slopes within a cell type. The paper uses HalfNormal(0.30).' },
+    { k: 'tau',  label: 'τ between-signature SD', min: 0.02, max: 1.2, step: 0.01, value: 0.10, colour: TEAL, hint: 'Prior spread of slopes. Small τ pulls every slope to the mean; large τ leaves them alone. The paper’s prior is HalfNormal(0.30).' },
+    { k: 'mult', label: 'noisier data (× SE)', min: 1, max: 8, step: 0.25, value: 3, colour: BLUE, fmt: x => '×' + x.toFixed(2).replace(/0$/, ''), hint: 'What-if: inflate each published SE, as if fewer cells supported the signature. ×1 is the data as published.' },
     { k: 'cov',  label: 'achieved coverage', min: 0.70, max: 0.95, step: 0.005, value: 0.846, colour: MAGENTA, fmt: x => (x * 100).toFixed(1) + '%', hint: 'Simulated coverage of a nominal 95% interval. 84.6% is the paper’s value.' },
     { k: 'show', label: 'show unpooled estimates', min: 0, max: 1, step: 1, value: 1, colour: GREY, fmt: x => (x ? 'yes' : 'no'), hint: 'Overlay the raw per-signature estimates for comparison.' }
   ],
   presets: [
-    { label: 'Reference', v: { tau: 0.30, cov: 0.846, show: 1 } },
-    { label: 'Nominal coverage', v: { tau: 0.30, cov: 0.95, show: 1 } },
-    { label: 'No pooling', v: { tau: 1.2, cov: 0.846, show: 1 } },
-    { label: 'Heavy pooling', v: { tau: 0.05, cov: 0.846, show: 1 } },
-    { label: 'Worse undercoverage', v: { tau: 0.30, cov: 0.75, show: 1 } }
+    { label: 'Published as is', v: { tau: 0.30, mult: 1, cov: 0.846, show: 1 } },
+    { label: 'Sparse data, pooled', v: { tau: 0.10, mult: 3, cov: 0.846, show: 1 } },
+    { label: 'Sparse, no pooling', v: { tau: 1.2, mult: 3, cov: 0.846, show: 1 } },
+    { label: 'Sparse, heavy pooling', v: { tau: 0.03, mult: 4, cov: 0.846, show: 1 } },
+    { label: 'Nominal coverage', v: { tau: 0.10, mult: 3, cov: 0.95, show: 1 } }
   ],
   usesData: true,
   init() { return {}; },
   draw(svg, v) {
-    const realRows = DATA && DATA.widening && DATA.widening.rows.length
-      ? DATA.widening.rows.slice(0, 12).map(r => ({
+    const W = DATA && DATA.widening && DATA.widening.rows;
+    const pick = W && W.length ? Array.from({ length: 12 }, (_, i) => W[Math.round(i * (W.length - 1) / 11)]) : null;
+    const realRows = pick ? pick.map(r => ({
           label: r[0] + ' · ' + r[1].replace(/_/g, ' '),
-          est: r[2], se: (r[4] - r[3]) / 3.9199 }))
-      : null;
-    const rows = realRows || DEMO_FOREST, mean = precisionMean(rows), f = widenFactor(v.cov);
+          est: r[2], se: (r[4] - r[3]) / 3.9199 * v.mult })) : null;
+    const rows = realRows || DEMO_FOREST.map(r => ({ ...r, se: r.se * v.mult / 3 })), mean = precisionMean(rows), f = widenFactor(v.cov);
     const n = rows.length, rowH = 21, top = 30, H = top + n * rowH + 44;
-    svg.setAttribute('viewBox', `0 0 460 ${H}`);
+    svg.setAttribute('viewBox', `0 0 520 ${H}`);
     svg.replaceChildren();
-    const lim = 0.8, L = 196, R = 448;
+    const ext = Math.max(...rows.map(r => Math.abs(r.est) + 1.96 * r.se * Math.max(1, f)));
+    const lim = [0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.2, 1.6, 2.4, 3.2].find(q => q >= ext * 1.02) || 3.2, L = 240, R = 506;
     const X = b => L + ((clamp(b, -lim, lim) + lim) / (2 * lim)) * (R - L);
 
-    for (const t of [-0.5, 0, 0.5]) {
+    for (const t of [-lim, -lim / 2, 0, lim / 2, lim]) {
       svg.append(s('line', { x1: X(t), x2: X(t), y1: top - 10, y2: top + n * rowH,
         stroke: t === 0 ? INK : LINE, 'stroke-dasharray': t === 0 ? '' : '3 3' }));
       const tl = s('text', { x: X(t), y: top + n * rowH + 16, 'text-anchor': 'middle', fill: GREY, 'font-size': 11 });
-      tl.textContent = minus(t); svg.append(tl);
+      tl.textContent = minus(+t.toFixed(2)); svg.append(tl);
     }
     svg.append(s('line', { x1: X(mean), x2: X(mean), y1: top - 10, y2: top + n * rowH, stroke: TEAL, 'stroke-width': 1.5, opacity: 0.6 }));
     const ml = s('text', { x: X(mean), y: top - 15, 'text-anchor': 'middle', fill: TEAL, 'font-size': 11, 'font-weight': 700 });
@@ -262,12 +264,12 @@ const pooling = {
       if (exclW) calledWide++;
       const col = p.est >= 0 ? MAGENTA : BLUE;
 
-      const nm = s('text', { x: 188, y: y + 4, 'text-anchor': 'end', fill: excl ? INK : GREY, 'font-size': 11.5 });
+      const nm = s('text', { x: 232, y: y + 4, 'text-anchor': 'end', fill: excl ? INK : GREY, 'font-size': 11 });
       nm.textContent = r.label; svg.append(nm);
 
       if (v.show) {
-        svg.append(s('line', { x1: X(r.est - 1.96 * r.se), x2: X(r.est + 1.96 * r.se), y1: y - 6, y2: y - 6, stroke: GREY, 'stroke-width': 1, opacity: 0.45 }));
-        svg.append(s('circle', { cx: X(r.est), cy: y - 6, r: 2.2, fill: GREY, opacity: 0.55 }));
+        svg.append(s('line', { x1: X(r.est - 1.96 * r.se), x2: X(r.est + 1.96 * r.se), y1: y - 6, y2: y - 6, stroke: GREY, 'stroke-width': 1.6, opacity: 0.6 }));
+        svg.append(s('circle', { cx: X(r.est), cy: y - 6, r: 3, fill: GREY, opacity: 0.85 }));
       }
       svg.append(s('line', { x1: X(p.est - wide), x2: X(p.est + wide), y1: y + 3, y2: y + 3, stroke: col, 'stroke-width': 1, opacity: 0.35 }));
       svg.append(s('line', { x1: X(p.est - half), x2: X(p.est + half), y1: y + 3, y2: y + 3, stroke: col, 'stroke-width': 2.2 }));
@@ -277,7 +279,7 @@ const pooling = {
     cap.textContent = 'BMI slope per 5 kg/m² (score SD)'; svg.append(cap);
 
     return {
-      eq: `τ = ${v.tau.toFixed(2)} · widening × <b>${f.toFixed(2)}</b> at ${(v.cov * 100).toFixed(1)}% coverage`,
+      eq: `τ = ${v.tau.toFixed(2)} · SE ×${v.mult.toFixed(2).replace(/0$/, '')}${v.mult === 1 ? ' (as published)' : ' (what-if)'} · widening × <b>${f.toFixed(2)}</b> at ${(v.cov * 100).toFixed(1)}% coverage`,
       cards: [
         ['called, nominal 95%', String(called) + ' / ' + n, 'HDI excludes zero'],
         ['called, widened', String(calledWide) + ' / ' + n, 'after ×' + f.toFixed(2), true],
@@ -965,10 +967,10 @@ const simulation = {
       if (B && O) real = { bRmse: B[4], bCov: B[5], oRmse: O[4], oCov: O[5] };
     }
     if (real) {
-      svg.setAttribute('viewBox', '0 0 360 346');
-      const y0 = 318, SC = 600, XT = 176, bw = r => Math.min(120, Math.max(2, r * SC));
-      svg.append(s('line', { x1: 46, x2: 348, y1: 294, y2: 294, stroke: LINE }));
-      const k = s('text', { x: 46, y: 309, fill: INK, 'font-size': 10, 'font-weight': 700 });
+      svg.setAttribute('viewBox', '0 0 360 356');
+      const y0 = 328, SC = 600, XT = 176, bw = r => Math.min(120, Math.max(2, r * SC));
+      svg.append(s('line', { x1: 46, x2: 348, y1: 296, y2: 296, stroke: LINE }));
+      const k = s('text', { x: 46, y: 312, fill: INK, 'font-size': 10, 'font-weight': 700 });
       k.textContent = 'Published simulation: ' + skey; svg.append(k);
       [['Bayes', real.bRmse, real.bCov, TEAL, y0], ['OLS', real.oRmse, real.oCov, BLUE, y0 + 14]].forEach(([nm, r, cv, col, y]) => {
         svg.append(s('rect', { x: 46, y: y - 8, width: bw(r), height: 8, rx: 2, fill: col }));
@@ -1286,7 +1288,7 @@ const PROVENANCE = {
   'screen':        ['published', 'Published counts', 'Funnel, transition matrix and gene counts are the study\u2019s own figures.'],
   'widening':      ['published', 'Published estimates', 'All 914 cellular slopes and their HDIs, with the correction applied live.'],
   'support':       ['published', 'Published metrics', 'Allocated-read totals and gate tiers per deconvolution component.'],
-  'pooling':       ['published', 'Published estimates', 'Forest runs on published posterior means and HDIs.'],
+  'pooling':       ['published', 'Published estimates', 'Twelve published slopes, strongest to weakest survivor. The noise multiplier is a what-if.'],
   'conditioning':  ['mixed', 'Published estimates on request', 'Opens on the paper\u2019s calibration scenarios. Load a real feature from the selector above.'],
   'contrast':      ['mixed', 'Published estimates on request', 'Opens on illustrative values. Load a real programme from the selector above.'],
   'simulation':    ['mixed', 'Published metrics, simulated draw', 'The dataset is generated live from the notebook\u2019s model; the RMSE and coverage bars are published.'],
