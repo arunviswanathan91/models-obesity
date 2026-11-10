@@ -470,7 +470,7 @@ const heatmap = {
   ],
   init() { return {}; },
   draw(svg, v) {
-    const cw = 44, ch = 26, L = 92, T = 34;
+    const cw = 56, ch = 28, L = 96, T = 34;
     const W = L + SIGS.length * cw + 14, H = T + CELLS.length * ch + 52;
     svg.setAttribute('viewBox', `0 0 ${Math.max(W, 340)} ${H}`);
     svg.replaceChildren();
@@ -916,7 +916,7 @@ const simulation = {
     const bc = lstsq(Xc, H), bk = lstsq(Xk, H);
     const contCoef = bc[1], ow = bk[1], ob = bk[2];
 
-    svg.setAttribute('viewBox', '0 0 360 272');
+    svg.setAttribute('viewBox', '0 0 360 292');
     svg.replaceChildren();
     const L = 46, R = 348, T = 16, B = 214;
     const bmin = 18, bmax = 46;
@@ -945,11 +945,13 @@ const simulation = {
       const t = s('text', { x: X(b), y: B + 15, 'text-anchor': 'middle', fill: GREY, 'font-size': 10.5 });
       t.textContent = String(b); svg.append(t);
     }
-    const k1 = s('text', { x: L, y: 252, fill: INK, 'font-size': 10.5 }); k1.textContent = '— generating mean H';
-    const k2 = s('text', { x: L + 120, y: 252, fill: MAGENTA, 'font-size': 10.5 }); k2.textContent = '-- continuous target';
-    const k3 = s('text', { x: L + 232, y: 252, fill: TEAL, 'font-size': 10.5 }); k3.textContent = '— categorical target';
-    svg.append(k1, k2, k3);
-    const k4 = s('text', { x: L, y: 266, fill: GREY, 'font-size': 10.5 });
+    const sw = (x, y, col, dash, wd) => s('line', { x1: x, x2: x + 16, y1: y - 3.5, y2: y - 3.5, stroke: col, 'stroke-width': wd, 'stroke-dasharray': dash || '' });
+    const lg = [[L, INK, '', 2.6, 'generating mean H'], [L + 112, MAGENTA, '5 3', 2.2, 'continuous target'], [L + 214, TEAL, '', 2.6, 'categorical target']];
+    for (const [x, col, dash, wd, txt] of lg) {
+      svg.append(sw(x, 266, col, dash, wd));
+      const q = s('text', { x: x + 21, y: 266, fill: INK, 'font-size': 10 }); q.textContent = txt; svg.append(q);
+    }
+    const k4 = s('text', { x: L, y: 284, fill: GREY, 'font-size': 10 });
     k4.textContent = `${c.n} patients · σⱼ ${scale.toFixed(2)} · βⱼ ${minus(beta)}`;
     svg.append(k4);
 
@@ -963,19 +965,17 @@ const simulation = {
       if (B && O) real = { bRmse: B[4], bCov: B[5], oRmse: O[4], oCov: O[5] };
     }
     if (real) {
-      svg.setAttribute('viewBox', '0 0 360 300');
-      const y0 = 262, SC = 900;
-      const k = s('text', { x: 46, y: y0 - 4, fill: INK, 'font-size': 10, 'font-weight': 700 });
-      k.textContent = 'published simulation: ' + skey; svg.append(k);
-      svg.append(s('rect', { x: 46, y: y0, width: Math.max(2, real.bRmse * SC), height: 7, rx: 2, fill: TEAL }));
-      const t1 = s('text', { x: 46 + Math.max(2, real.bRmse * SC) + 5, y: y0 + 7, fill: GREY, 'font-size': 9.5 });
-      t1.textContent = 'Bayes RMSE ' + real.bRmse.toFixed(3) + ', coverage ' + (real.bCov * 100).toFixed(1) + '%';
-      svg.append(t1);
-      svg.append(s('rect', { x: 46, y: y0 + 10, width: Math.max(2, real.oRmse * SC), height: 7, rx: 2, fill: BLUE }));
-      const t2 = s('text', { x: 46 + Math.max(2, real.oRmse * SC) + 5, y: y0 + 17, fill: GREY, 'font-size': 9.5 });
-      t2.textContent = 'OLS RMSE ' + real.oRmse.toFixed(3) + ', coverage ' + (real.oCov * 100).toFixed(1) + '%';
-      svg.append(t2);
-    }
+      svg.setAttribute('viewBox', '0 0 360 346');
+      const y0 = 318, SC = 600, XT = 176, bw = r => Math.min(120, Math.max(2, r * SC));
+      svg.append(s('line', { x1: 46, x2: 348, y1: 294, y2: 294, stroke: LINE }));
+      const k = s('text', { x: 46, y: 309, fill: INK, 'font-size': 10, 'font-weight': 700 });
+      k.textContent = 'Published simulation: ' + skey; svg.append(k);
+      [['Bayes', real.bRmse, real.bCov, TEAL, y0], ['OLS', real.oRmse, real.oCov, BLUE, y0 + 14]].forEach(([nm, r, cv, col, y]) => {
+        svg.append(s('rect', { x: 46, y: y - 8, width: bw(r), height: 8, rx: 2, fill: col }));
+        const q = s('text', { x: XT, y, fill: GREY, 'font-size': 10 });
+        q.textContent = `${nm} RMSE ${r.toFixed(3)} · coverage ${(cv * 100).toFixed(1)}%`; svg.append(q);
+      });
+    } else svg.setAttribute('viewBox', '0 0 360 292');
 
     let verdict;
     if (shape === 'null') verdict = ['Nothing to find', 'Both targets are zero. This is the condition that measures the false-discovery proportion, not power.'];
@@ -1032,10 +1032,10 @@ const funnel = {
   init() { return {}; },
   draw(svg, v) {
     const assay = v.assay ? 'glyco' : 'phospho';
-    svg.setAttribute('viewBox', '0 0 360 290');
+    svg.setAttribute('viewBox', '0 0 420 340');
     svg.replaceChildren();
     if (!DATA) {
-      const t = s('text', { x: 180, y: 140, 'text-anchor': 'middle', fill: GREY, 'font-size': 12 });
+      const t = s('text', { x: 210, y: 140, 'text-anchor': 'middle', fill: GREY, 'font-size': 12 });
       t.textContent = 'Loading published counts…'; svg.append(t);
       return { eq: 'Loading…', cards: [], verdict: ['Loading', 'Fetching the published screen counts.'] };
     }
@@ -1052,7 +1052,7 @@ const funnel = {
     const gained = get('uncertain','negative') + get('uncertain','positive');
 
     // funnel bars
-    const L = 150, R = 348, T = 20, rowH = 23;
+    const L = 188, R = 366, T = 14, rowH = 24;
     const max = stages[0][1];
     const w = n => {
       if (!v.logx) return (n / max) * (R - L);
@@ -1071,35 +1071,35 @@ const funnel = {
     gl.textContent = `${genes.candidate} candidate genes of ${genes.eligible} eligible`; svg.append(gl);
 
     // transition matrix
-    const MT = T + stages.length * rowH + 26, cell = 44, MX = 150;
-    const head = s('text', { x: MX, y: MT - 6, fill: GREY, 'font-size': 10.5 });
+    const MT = T + stages.length * rowH + 40, cw = 62, ch = 40, MX = 196;
+    const head = s('text', { x: MX + cw * 1.5, y: MT - 8, 'text-anchor': 'middle', fill: GREY, 'font-size': 10.5 });
     head.textContent = 'conditional call →'; svg.append(head);
-    const side = s('text', { x: 16, y: MT + cell * 1.5, fill: GREY, 'font-size': 10.5,
-      transform: `rotate(-90 16 ${MT + cell * 1.5})` });
+    const side = s('text', { x: 20, y: MT + 18 + ch * 1.5, 'text-anchor': 'middle', fill: GREY, 'font-size': 10.5,
+      transform: `rotate(-90 20 ${MT + 18 + ch * 1.5})` });
     side.textContent = '← marginal call'; svg.append(side);
     dirs.forEach((c, j) => {
-      const t = s('text', { x: MX + j * cell + cell / 2, y: MT + 9, 'text-anchor': 'middle', fill: GREY, 'font-size': 10 });
-      t.textContent = c.slice(0, 4); svg.append(t);
+      const t = s('text', { x: MX + j * cw + (cw - 3) / 2, y: MT + 9, 'text-anchor': 'middle', fill: GREY, 'font-size': 10 });
+      t.textContent = c; svg.append(t);
     });
     dirs.forEach((m, i) => {
-      const t = s('text', { x: MX - 7, y: MT + 16 + i * cell + cell / 2, 'text-anchor': 'end', fill: GREY, 'font-size': 10 });
-      t.textContent = m.slice(0, 4); svg.append(t);
+      const t = s('text', { x: MX - 8, y: MT + 18 + i * ch + ch / 2, 'text-anchor': 'end', fill: GREY, 'font-size': 10 });
+      t.textContent = m; svg.append(t);
       dirs.forEach((c, j) => {
-        const n = get(m, c), x = MX + j * cell, y = MT + 16 + i * cell;
+        const n = get(m, c), x = MX + j * cw, y = MT + 18 + i * ch;
         const diag = m === c, call = c !== 'uncertain';
         const fill = n === 0 ? 'transparent'
           : diag && call ? 'rgba(14,124,123,0.75)'
           : call ? 'rgba(216,27,96,0.55)'
           : m !== 'uncertain' ? 'rgba(44,90,160,0.45)' : 'rgba(0,0,0,0.05)';
-        svg.append(s('rect', { x, y, width: cell - 3, height: cell - 3, rx: 3, fill,
+        svg.append(s('rect', { x, y, width: cw - 4, height: ch - 4, rx: 3, fill,
           stroke: LINE, 'stroke-width': 1 }));
-        const t2 = s('text', { x: x + (cell - 3) / 2, y: y + (cell - 3) / 2 + 4, 'text-anchor': 'middle',
+        const t2 = s('text', { x: x + (cw - 4) / 2, y: y + (ch - 4) / 2 + 4, 'text-anchor': 'middle',
           'font-size': 11, 'font-weight': call || diag ? 700 : 400,
           fill: n && (call || (diag && call)) ? '#fff' : INK });
         t2.textContent = n ? String(n) : '·'; svg.append(t2);
       });
     });
-    const key = s('text', { x: MX, y: MT + 16 + 3 * cell + 14, fill: GREY, 'font-size': 10 });
+    const key = s('text', { x: MX, y: MT + 18 + 3 * ch + 12, fill: GREY, 'font-size': 10 });
     key.textContent = 'teal kept · blue lost · pink gained'; svg.append(key);
 
     return {
