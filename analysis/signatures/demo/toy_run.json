@@ -1,0 +1,34 @@
+{
+  "_note": "Toy catalogue and scripted replies for the demonstration only. Gene lists are illustrative, not the manuscript catalogue. No model is called: every 'recommendation' and 'suggestion' below is fixed text.",
+  "catalogue": {
+    "TAM": {
+      "Lipid_Processing":  ["APOE","LPL","FABP4","CD36","PLIN2","LIPA","TREM2","APOC1"],
+      "Lipid_Metabolism":  ["APOE","LPL","FABP4","CD36","PLIN2","ABCA1","SCARB1"],
+      "Iron_Handling":     ["HMOX1","FTL","FTH1","SLC40A1","CD163","TFRC","NCOA4","FLVCR1","BLVRB","SLC11A1"],
+      "M2_Polarization":   ["MRC1","CD163","IL10","ARG1","TGFB1","CCL18","MSR1","STAB1"]
+    },
+    "CD8+ T cells": {
+      "Costimulation":          ["CD28","ICOS","TNFRSF9","TNFRSF4","CD27"],
+      "Costimulatory_Activity": ["CD28","ICOS","TNFRSF9","CD226","CD27","CD2"],
+      "Exhaustion":             ["PDCD1","HAVCR2","LAG3","TIGIT","TOX","CTLA4","ENTPD1","CXCL13"]
+    }
+  },
+  "dedup_replies": [
+    {"cell_type":"TAM","sig1":"Lipid_Processing","sig2":"Lipid_Metabolism","choice":4,
+     "reasoning":"Both describe lipid-laden macrophages; most genes are shared, so one merged signature is cleaner."},
+    {"cell_type":"CD8+ T cells","sig1":"Costimulation","sig2":"Costimulatory_Activity","choice":4,
+     "reasoning":"Near-identical biology under two names."}
+  ],
+  "dedup_decisions": {"TAM|Lipid_Processing|Lipid_Metabolism":4, "CD8+ T cells|Costimulation|Costimulatory_Activity":1},
+  "suggestions": {
+    "TAM": [
+      {"name":"Hypoxic_Adaptation","genes":["HIF1A","VEGFA","SLC2A1","BNIP3","LDHA","PGK1","ENO1","HMOX1","FTL","ANGPTL4"],"rationale":"Hypoxia-driven programme in tumour macrophages."},
+      {"name":"Foam_Cell_Lipid","genes":["APOE","LPL","FABP5","LIPA","PLIN2","NPC2","CTSD","GPNMB","SPP1","ACP5"],"rationale":"Lipid-laden state."}
+    ],
+    "CD8+ T cells": [
+      {"name":"Metabolic_Stress","genes":["HIF1A","PPARGC1A","SLC2A1","LDHA","CPT1A","ACADVL","GLUT3","MTOR","SIRT1","FOXO1"],"rationale":"Nutrient-stress state of exhausted T cells."},
+      {"name":"Cytokine_Response","genes":["PDCD1","IFNG","TNF","IL2","GZMB","PRF1"],"rationale":"Short list, shown only to illustrate the length rule."}
+    ]
+  },
+  "suggestion_decisions": {"TAM|Hypoxic_Adaptation":"y","TAM|Foam_Cell_Lipid":"y","CD8+ T cells|Metabolic_Stress":"y","CD8+ T cells|Cytokine_Response":"n"}
+}

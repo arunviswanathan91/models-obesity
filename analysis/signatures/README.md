@@ -27,3 +27,14 @@ The output and log directories must already exist. Use new output and log filena
 - The log records applied actions and the model name. It does not retain complete prompts, model responses or independent literature validation. Biological suitability and supporting evidence require human review.
 
 The frozen manuscript catalogue must be obtained separately; rerunning this interactive workflow will not reconstruct it deterministically. Source details are in [provenance.json](provenance.json).
+
+## Demonstration without a model
+
+[demo/](demo/) replays the same review rules on a small toy catalogue with fixed, pre-written replies. It calls no model, needs no key or network, and uses only the Python standard library. The gene lists are illustrative and are not the manuscript catalogue.
+
+```bash
+python analysis/signatures/demo/demo_curation.py --fast        # scripted replay
+python analysis/signatures/demo/demo_curation.py --interactive # make the decisions yourself
+```
+
+[demo/signature_curation_walkthrough.html](demo/signature_curation_walkthrough.html) is the same replay as a step-through page; open it in a browser.
