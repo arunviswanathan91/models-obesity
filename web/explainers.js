@@ -935,7 +935,46 @@ function cmpPanel(svg, v, mem, model) {
   const se = isT ? st.seT : st.seO, hw = 1.959964 * se;
   const col = isT ? TEAL : MAGENTA;
   svg.replaceChildren();
-  if (v.view < 0.5) {
+  const view = Math.round(v.view);
+  if (view === 0) {
+    // Residuals of one cell type: patients down, signatures across.
+    svg.setAttribute('viewBox', '0 0 360 286');
+    const NP = mem.zs.length, M = mem.eps[0].length, L = 46, R = 296, T = 16, B = 244;
+    const cw = (R - L) / M, rh = (B - T) / NP;
+    const w = v.om ** 2 / (v.om ** 2 + v.sg ** 2 / M);
+    const res = mem.zs.map((z, i) => {
+      const y = mem.eps[i].map(e => v.om * z + v.sg * e);
+      const ybar = y.reduce((a, q) => a + q, 0) / M;
+      return isT ? y.map(q => q - w * ybar) : y;
+    });
+    const lim = Math.max(0.35, 2.2 * Math.sqrt(v.om ** 2 + v.sg ** 2));
+    for (let i = 0; i < NP; i++) for (let j = 0; j < M; j++) {
+      const r = res[i][j], a = Math.min(1, Math.abs(r) / lim);
+      svg.append(s('rect', { x: L + j * cw, y: T + i * rh, width: cw - 0.6, height: rh - 0.6, fill: r >= 0 ? MAGENTA : BLUE, opacity: 0.08 + 0.92 * a }));
+    }
+    const rowMean = res.map(r => r.reduce((a, q) => a + q, 0) / M);
+    const rmSd = Math.sqrt(rowMean.reduce((a, q) => a + q * q, 0) / NP);
+    const mLim = Math.max(0.15, 2.2 * Math.sqrt(v.om ** 2 + v.sg ** 2 / M));
+    for (let i = 0; i < NP; i++) {
+      const a = Math.min(1, Math.abs(rowMean[i]) / mLim);
+      svg.append(s('rect', { x: 306, y: T + i * rh, width: 30, height: rh - 0.6, fill: rowMean[i] >= 0 ? MAGENTA : BLUE, opacity: 0.08 + 0.92 * a }));
+    }
+    const hm = s('text', { x: 321, y: T - 4, 'text-anchor': 'middle', fill: GREY, 'font-size': 10 }); hm.textContent = 'patient mean'; svg.append(hm);
+    const ax = s('text', { x: (L + R) / 2, y: B + 16, 'text-anchor': 'middle', fill: GREY, 'font-size': 11 }); ax.textContent = M + ' signatures of one cell type'; svg.append(ax);
+    const ay = s('text', { x: 13, y: (T + B) / 2, 'text-anchor': 'middle', fill: GREY, 'font-size': 11, transform: `rotate(-90 13 ${(T + B) / 2})` }); ay.textContent = NP + ' patients, ordered by shared shift'; svg.append(ay);
+    const key = s('text', { x: L, y: B + 34, fill: GREY, 'font-size': 10.5 }); key.textContent = 'pink: score above the model  ·  blue: below'; svg.append(key);
+    // mean correlation between signatures, across the displayed patients
+    let cs = 0, cn = 0;
+    for (let a = 0; a < M; a++) for (let b = a + 1; b < M; b++) {
+      const xa = res.map(r => r[a]), xb = res.map(r => r[b]);
+      const ma = xa.reduce((p, q) => p + q, 0) / NP, mb = xb.reduce((p, q) => p + q, 0) / NP;
+      let sab = 0, saa = 0, sbb = 0;
+      for (let i = 0; i < NP; i++) { sab += (xa[i] - ma) * (xb[i] - mb); saa += (xa[i] - ma) ** 2; sbb += (xb[i] - mb) ** 2; }
+      if (saa > 0 && sbb > 0) { cs += sab / Math.sqrt(saa * sbb); cn++; }
+    }
+    return { resid: { corr: cn ? cs / cn : 0, rmSd, rho: v.om ** 2 / (v.om ** 2 + v.sg ** 2) }, hw, cover: null, called: null, N: 0 };
+  }
+  if (view === 1) {
     svg.setAttribute('viewBox', '0 0 360 286');
     const N = 40, L = 52, R = 348, T = 16, B = 244, row = (B - T) / N;
     const lim = NICE.find(q => q >= Math.abs(v.beta) + 3.3 * st.seT) || 1.6;
@@ -979,8 +1018,8 @@ const compare = {
   compare: true,
   title: 'Model comparison: Student-t intercept vs orthogonal patient effect',
   ref: 'Comparison of the two cellular models',
-  blurb: 'Both models see the same simulated cohorts. The only difference is how each treats the shift that all signatures of one cell type share within a patient. The Student-t intercept model has a term for it. The orthogonal model has one patient effect for all features, so it treats the signatures as more independent than they are and draws intervals that are too narrow. Change any slider and both graphs move together.',
-  note: 'Exact arithmetic for the cell-type mean of K signatures: the correct variance per patient is ω² + σ²/K, and a model that ignores the shared shift uses (ω² + σ²)/K. Both panels reuse the same 40 draws of the sampling error, so the estimates are identical and only the intervals differ. This isolates one mechanism and does not reproduce the full simulation, where the orthogonal model covered the true effects 50 to 66% of the time and the Student-t intercept model stayed near nominal.',
+  blurb: 'Both models see the same simulated cohorts. The only difference is how each treats the shift that all signatures of one cell type share within a patient. The Student-t intercept model has a term for it. The orthogonal model has one patient effect for all features, so it treats the signatures as more independent than they are and draws intervals that are too narrow. Start on the residuals graph, where the problem is visible; the other two graphs show what it does to the intervals. Change any slider and both panels move together.',
+  note: 'Exact arithmetic for the cell-type mean of K signatures: the correct variance per patient is ω² + σ²/K, and a model that ignores the shared shift uses (ω² + σ²)/K. Both panels reuse the same 40 draws of the sampling error, so the estimates are identical and only the intervals differ. This isolates one mechanism and does not reproduce the full simulation, where the orthogonal model covered the true effects 50 to 66% of the time and the Student-t intercept model stayed near nominal. Genes shared between signatures leave some residual dependence in both models; this window isolates the part that a patient × cell-type intercept can remove.',
   models: [
     { key: 'T', title: 'Student-t intercept model', tag: 'primary', terms: 'T',
       eq: '<span data-term="mu">μ<sub>ij</sub></span> = α<sub>j</sub> + β<sub>j</sub>BMI<sub>i</sub> + … + <span data-term="v">v<sub>i,c(j)</sub></span>' },
@@ -1005,7 +1044,7 @@ const compare = {
     { k: 'K', label: 'K signatures in the cell type', min: 1, max: 60, step: 1, value: 35, colour: BLUE, fmt: x => String(Math.round(x)), hint: 'More signatures help little once the shared shift dominates.' },
     { k: 'n', label: 'patients', min: 40, max: 300, step: 1, value: 127, colour: BLUE, fmt: x => String(Math.round(x)), hint: 'The study has 127.' },
     { k: 'seed', label: 'set of repeated cohorts', min: 1, max: 20, step: 1, value: 1, colour: GREY, fmt: x => '#' + Math.round(x), hint: 'A different batch of 40 simulated cohorts.' },
-    { k: 'view', label: 'graph', min: 0, max: 1, step: 1, value: 0, colour: GREY, fmt: x => (x ? 'width vs ω' : 'repeated cohorts'), hint: 'Switch between the repeated-cohort intervals and the interval width as the shared shift grows.' }
+    { k: 'view', label: 'graph', min: 0, max: 2, step: 1, value: 0, colour: GREY, fmt: x => ['residuals', 'repeated cohorts', 'width vs ω'][Math.round(x)], hint: 'Residuals show the problem itself; the other two show what it does to the intervals.' }
   ],
   presets: [
     { label: 'Reference', v: { beta: 0.10, om: 0.35, sg: 0.65, K: 35, n: 127, seed: 1 } },
@@ -1017,11 +1056,25 @@ const compare = {
   ],
   init() {
     const r = lcg(777001);
-    return { z: Array.from({ length: 20 }, () => Array.from({ length: 40 }, () => r.n())) };
+    const r2 = lcg(777002);
+    const pairs = Array.from({ length: 30 }, () => ({ z: r2.n(), e: Array.from({ length: 14 }, () => r2.n()) })).sort((a, b) => a.z - b.z);
+    return { z: Array.from({ length: 20 }, () => Array.from({ length: 40 }, () => r.n())),
+             zs: pairs.map(q => q.z), eps: pairs.map(q => q.e) };
   },
   panel(key, svg, v, mem) {
     const st = cmpStats(v), out = cmpPanel(svg, v, mem, key), isT = key === 'T';
     const exp = isT ? 0.95 : 2 * Phi(1.959964 * st.ratio) - 1;
+    if (out.resid) {
+      const rs = out.resid;
+      return {
+        live: isT ? `the patient × cell-type intercept takes out the shared shift · residuals of different signatures are <b>nearly uncorrelated</b>` : `no term for the shared shift · residuals of the same cell type stay <b>correlated</b> within a patient`,
+        cards: [
+          ['correlation between signatures', minus(+rs.corr.toFixed(2)), isT ? 'after the intercept, in this sample' : 'residuals, in this sample (model-free ρ ' + rs.rho.toFixed(2) + ')', true],
+          ['patient-mean residual SD', rs.rmSd.toFixed(2), isT ? 'close to the noise floor' : 'the shared shift left in the residuals'],
+          ['interval half-width', '±' + out.hw.toFixed(3), isT ? 'correct for the shared shift' : (st.ratio * 100).toFixed(0) + '% of the correct width']
+        ]
+      };
+    }
     const cards = [
       ['interval half-width', '±' + out.hw.toFixed(3), isT ? 'correct for the shared shift' : (st.ratio * 100).toFixed(0) + '% of the correct width', true],
       ['expected coverage', (exp * 100).toFixed(0) + '%', 'of a nominal 95% interval']
@@ -1032,6 +1085,12 @@ const compare = {
   },
   verdict(v) {
     const st = cmpStats(v), exp = 2 * Phi(1.959964 * st.ratio) - 1;
+    if (Math.round(v.view) === 0) {
+      const rho = v.om ** 2 / (v.om ** 2 + v.sg ** 2);
+      return rho > 0.05
+        ? ['The residual problem', `A shift shared by the signatures of one cell type makes a patient’s residuals move together: horizontal stripes on the right, and a patient-mean column that is far from zero. With ω = ${v.om.toFixed(2)} and σ = ${v.sg.toFixed(2)} the signatures are correlated at about ${rho.toFixed(2)} even after BMI, age and sex. The orthogonal model has no term for it, so it counts them as independent and reports intervals that are too narrow. The Student-t intercept model absorbs the shift, and its residuals look like noise.`]
+        : ['Nothing to see here', 'With almost no shared shift the residuals are independent in both models, so neither has a problem to fix. Raise ω to bring the stripes out.'];
+    }
     return st.ratio < 0.92
       ? ['Same data, different intervals', `With a shared shift of ${v.om.toFixed(2)} across ${st.K} signatures the orthogonal model draws intervals ${(st.ratio * 100).toFixed(0)}% as wide as the Student-t intercept model, so a nominal 95% interval covers the truth about ${(exp * 100).toFixed(0)}% of the time. The estimates are identical; the difference is how much uncertainty each model admits to.`]
       : ['The two models agree here', 'With little shared shift, or very few signatures, treating signatures as independent costs almost nothing, so the two sets of intervals are nearly the same width. Raise ω or K to separate them.'];
