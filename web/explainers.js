@@ -211,7 +211,12 @@ const conditioning = {
 const pooling = {
   id: 'pooling',
   title: 'Partial pooling and the 95% HDI',
-  eq: 'β<sub>j</sub> ~ Normal(μ<sub>c(j)</sub>, τ<sup>2</sup>)',
+  eq: '<span data-term="beta">β<sub>j</sub></span> ~ Normal(<span data-term="m">μ<sub>c(j)</sub></span>, <span data-term="tau">τ<sup>2</sup></span>)',
+  terms: {
+    beta: ['Signature slope', 'The BMI slope of one signature.'],
+    m: ['Cell-type mean', 'The average BMI slope of all signatures in that cell type. This is the cell-type estimate reported in Figure 3b.'],
+    tau: ['Spread between signatures', 'How much signature slopes in one cell type are allowed to differ. Small τ pulls each slope towards the cell-type mean; prior HalfNormal(0.30).']
+  },
   ref: 'Equation 4, decision rule',
   blurb: 'Signature slopes are shrunk towards their cell-type mean. Raise τ and the model trusts each signature on its own; lower it and weakly supported signatures are pulled in. The widening slider applies the paper’s correction for simulated undercoverage.',
   note: 'An HDI excluding zero is directional support under the model, with no multiplicity control and no minimum effect size. Simulated residual correlation among signatures gave about 84.6% coverage, so named associations were re-checked after widening each interval by 1.960/1.426 ≈ 1.37. Rows are 12 published slopes spread from the strongest to the weakest survivor; the noise multiplier is a what-if, because the published SEs are all small relative to τ and shrinkage is nearly invisible at ×1.',
@@ -611,10 +616,20 @@ const axes = (svg, L, R, T, B, xlab, ylab) => {
 const cellular = {
   id: 'cellular',
   title: 'The cellular RNA model (Student-t intercept)',
-  eq: 'Y<sub>ij</sub> ~ t<sub>ν</sub>(μ<sub>ij</sub>, σ<sub>j</sub>), μ<sub>ij</sub> = α<sub>j</sub> + β<sub>j</sub>BMI<sub>i</sub> + γ<sub>j</sub>age<sub>i</sub> + δ<sub>j</sub>sex<sub>i</sub> + v<sub>i,c(j)</sub>, v<sub>ic</sub> ~ t<sub>ν<sub>v</sub></sub>(0, ω<sub>c</sub>)',
+  eq: '<span data-term="Y">Y<sub>ij</sub></span> ~ <span data-term="t">t<sub>ν</sub></span>(<span data-term="mu">μ<sub>ij</sub></span>, <span data-term="sigma">σ<sub>j</sub></span>), <span data-term="mu">μ<sub>ij</sub></span> = <span data-term="alpha">α<sub>j</sub></span> + <span data-term="beta">β<sub>j</sub>BMI<sub>i</sub></span> + <span data-term="gamma">γ<sub>j</sub>age<sub>i</sub> + δ<sub>j</sub>sex<sub>i</sub></span> + <span data-term="v">v<sub>i,c(j)</sub></span>, <span data-term="v">v<sub>ic</sub> ~ t<sub>ν<sub>v</sub></sub>(0, ω<sub>c</sub>)</span>',
+  terms: {
+    Y: ['Signature score', 'Score of signature j in patient i, standardized across patients. Each signature belongs to one cell type c(j).'],
+    t: ['Student-t likelihood', 'Scores scatter around their fitted value with heavier tails than a normal curve, so a few extreme patients pull the estimates less.'],
+    mu: ['Fitted score', 'What the model expects patient i to score on signature j, given BMI, age, sex and the patient × cell-type intercept.'],
+    sigma: ['Residual scale', 'How far scores typically fall from the fitted value. Each signature has its own scale, pooled within its cell type.'],
+    alpha: ['Feature intercept', 'The average level of signature j. It does not change with BMI.'],
+    beta: ['BMI slope', 'The quantity the paper reports: the change in the score per unit of standardized BMI, shown per 5 kg/m². Slopes in one cell type are pulled towards their cell-type mean (Equation 4).'],
+    gamma: ['Age and sex', 'Adjustment terms. Age is related to BMI, so leaving it out would mix age effects into the BMI slope.'],
+    v: ['Patient × cell-type intercept', 'One shift shared by every signature of cell type c in patient i. It enters once per patient and cell type, so a shift seen in many signatures is not counted as many separate pieces of evidence. Its scale ω<sub>c</sub> has a HalfNormal(0.50) prior and its tails a Student-t with ν<sub>v</sub> − 2 ~ Exponential(0.10).']
+  },
   ref: 'Equations 2–5',
   blurb: 'One signature score, one patient at a time. Every term adds to the fitted mean, and only β is the BMI association. The term v is a patient × cell-type intercept: one shift shared by all signatures of that cell type in that patient. Move the highlighted patient along the cohort to see how the same slope gives very different scores.',
-  note: 'BMI and age are standardized; sex is coded −0.5 female, +0.5 male. Reported slopes are posterior draws multiplied by 5/sᴮᴹᴵ for a 5 kg/m² increase, with the cohort SD 4.462 kg/m². BMI slopes are pooled within cell types, β<sub>j</sub> ~ N(m<sub>c</sub>, τ<sub>c</sub>²), with m<sub>c</sub> ~ N(0, 0.20²) and τ<sub>c</sub> ~ HalfNormal(0.30). The intercept v has a Student-t distribution with ω<sub>c</sub> ~ HalfNormal(0.50) and ν<sub>v</sub> − 2 ~ Exponential(0.10); here it is drawn with ν = 4. Because v enters once per patient and cell type, a shift shared by many signatures is not counted as many separate pieces of evidence. Deconvolution and score-construction uncertainty are not propagated.',
+  note: 'BMI and age are standardized; sex is coded −0.5 female, +0.5 male. Reported slopes are posterior draws multiplied by 5/sᴮᴹᴵ for a 5 kg/m² increase, with the cohort SD 4.462 kg/m². BMI slopes are pooled within cell types around a cell-type mean m with spread τ, where m ~ N(0, 0.20²) and τ ~ HalfNormal(0.30). The intercept v is drawn here from a Student-t with 4 degrees of freedom. Deconvolution and score-construction uncertainty are not propagated.',
   params: [
     { k: 'beta',  label: 'β<sub>j</sub> BMI slope', min: -0.8, max: 0.8, step: 0.01, value: 0.30, colour: MAGENTA, hint: 'The quantity the paper reports.' },
     { k: 'gamma', label: 'γ<sub>j</sub> age coefficient', min: -0.5, max: 0.5, step: 0.01, value: 0.12, colour: BLUE, hint: 'Adjusted for, because age correlates with BMI.' },
@@ -691,11 +706,83 @@ const cellular = {
   }
 };
 
+/* ---------- widget: the patient x cell-type intercept and interval coverage ---------- */
+// Normal CDF via the Abramowitz-Stegun erf approximation (error < 1.5e-7).
+function Phi(x) {
+  const t = 1 / (1 + 0.3275911 * Math.abs(x) / Math.SQRT2);
+  const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x / 2);
+  return x >= 0 ? (1 + y) / 2 : (1 - y) / 2;
+}
+const intercept = {
+  id: 'intercept',
+  title: 'Why the patient × cell-type intercept matters',
+  eq: '<span data-term="v">v<sub>ic</sub> ~ t<sub>ν<sub>v</sub></sub>(0, ω<sub>c</sub>)</span> shared by all <span data-term="K">K signatures</span> of cell type c in patient i, <span data-term="keff">K<sub>eff</sub> = (ω² + σ²) / (ω² + σ²/K)</span>',
+  terms: {
+    v: ['Patient × cell-type intercept', 'A shift common to all signatures of one cell type in one patient, for example because the deconvolved profile of that cell type is brighter overall in that tumour.'],
+    K: ['Signatures per cell type', 'The number of signatures scored in the same deconvolved profile. Across the three analyses there are on average 28 to 38 signatures per cell type (914 features in 26 cell types).'],
+    keff: ['Effective number of signatures', 'How many independent signatures the K correlated ones are worth. With a large shared shift ω, K signatures carry little more information than one.']
+  },
+  ref: 'Equations 3 and 5, simulation',
+  blurb: 'Signatures scored in the same deconvolved profile move together within a patient. A model with no term for that shared shift treats them as independent, so its intervals for the cell-type mean are too narrow. Change the shift size and the number of signatures to see how far the coverage of a nominal 95% interval falls.',
+  note: 'Exact arithmetic for the cell-type mean of K signatures, each with shared patient × cell-type variance ω² and independent residual variance σ². The correct variance per patient is ω² + σ²/K; a model that ignores the shared part uses (ω² + σ²)/K. The number of patients cancels. This isolates one mechanism and does not reproduce the full simulation, where the orthogonal patient-effect model covered 0.50 to 0.66.',
+  params: [
+    { k: 'om', label: 'ω<sub>c</sub> shared shift SD', min: 0, max: 1, step: 0.01, value: 0.35, colour: TEAL, hint: 'Size of the shift shared by all signatures of a cell type in a patient.' },
+    { k: 'sg', label: 'σ residual SD', min: 0.2, max: 1.5, step: 0.01, value: 0.65, colour: GREY, hint: 'Independent noise of each signature.' },
+    { k: 'K', label: 'K signatures in the cell type', min: 1, max: 60, step: 1, value: 35, colour: MAGENTA, fmt: x => String(Math.round(x)), hint: 'More signatures add little once the shared shift dominates.' }
+  ],
+  presets: [
+    { label: 'Reference', v: { om: 0.35, sg: 0.65, K: 35 } },
+    { label: 'No shared shift', v: { om: 0, sg: 0.65, K: 35 } },
+    { label: 'Large shared shift', v: { om: 0.8, sg: 0.65, K: 35 } },
+    { label: 'Few signatures', v: { om: 0.35, sg: 0.65, K: 4 } }
+  ],
+  init() { return {}; },
+  draw(svg, v) {
+    const cov = K => { const r = Math.sqrt(((v.om ** 2 + v.sg ** 2) / K) / (v.om ** 2 + v.sg ** 2 / K)); return 2 * Phi(1.959964 * r) - 1; };
+    const K = Math.round(v.K), keff = (v.om ** 2 + v.sg ** 2) / (v.om ** 2 + v.sg ** 2 / K), c = cov(K);
+    svg.setAttribute('viewBox', '0 0 360 268');
+    svg.replaceChildren();
+    const L = 46, R = 348, T = 18, B = 214;
+    const X = k => L + (k - 1) / 59 * (R - L), Y = q => B - q * (B - T);
+    for (const g of [0.25, 0.5, 0.75, 0.95]) {
+      svg.append(s('line', { x1: L, x2: R, y1: Y(g), y2: Y(g), stroke: LINE, 'stroke-dasharray': g === 0.95 ? '' : '3 3' }));
+      const t = s('text', { x: L - 6, y: Y(g) + 4, 'text-anchor': 'end', fill: GREY, 'font-size': 10 }); t.textContent = g.toFixed(2); svg.append(t);
+    }
+    let path = '';
+    for (let k = 1; k <= 60; k++) path += (k === 1 ? 'M' : 'L') + X(k).toFixed(1) + ' ' + Y(cov(k)).toFixed(1);
+    svg.append(s('path', { d: path, fill: 'none', stroke: MAGENTA, 'stroke-width': 2.4 }));
+    svg.append(s('line', { x1: L, x2: R, y1: Y(0.95), y2: Y(0.95), stroke: TEAL, 'stroke-width': 2.4 }));
+    const a = s('text', { x: R - 4, y: Y(0.95) - 7, 'text-anchor': 'end', fill: TEAL, 'font-size': 11, 'font-weight': 700 }); a.textContent = 'with the intercept: 0.95'; svg.append(a);
+    const b = s('text', { x: R - 4, y: Y(cov(60)) + 15, 'text-anchor': 'end', fill: MAGENTA, 'font-size': 11, 'font-weight': 700 }); b.textContent = 'shared shift ignored'; svg.append(b);
+    svg.append(s('circle', { cx: X(K), cy: Y(c), r: 5.5, fill: MAGENTA, stroke: '#fff', 'stroke-width': 1.6 }));
+    axes(svg, L, R, T, B, 'signatures in the cell type (K)', 'coverage of a 95% interval');
+    for (const k of [1, 20, 40, 60]) { const t = s('text', { x: X(k), y: B + 15, 'text-anchor': 'middle', fill: GREY, 'font-size': 11 }); t.textContent = String(k); svg.append(t); }
+    const ratio = Math.sqrt(((v.om ** 2 + v.sg ** 2) / K) / (v.om ** 2 + v.sg ** 2 / K));
+    return {
+      eq: `K = ${K} signatures are worth <b>${keff.toFixed(1)}</b> independent ones · intervals that ignore the shared shift are <b>${(ratio * 100).toFixed(0)}%</b> of the correct width`,
+      cards: [
+        ['coverage, shift ignored', c.toFixed(2), 'nominal 0.95', true],
+        ['coverage, with intercept', '0.95', 'by construction'],
+        ['K<sub>eff</sub>', keff.toFixed(1), 'of ' + K + ' signatures'],
+        ['interval width', (ratio * 100).toFixed(0) + '%', 'of the correct width']
+      ],
+      verdict: c < 0.9
+        ? ['The intervals are too narrow', `Ignoring a shared shift of SD ${v.om.toFixed(2)} across ${K} signatures leaves the nominal 95% interval covering only ${(c * 100).toFixed(0)}% of the time. The patient × cell-type intercept puts that shared variation in one term, so the cell-type mean gets an interval of the right width.`]
+        : ['Little is lost here', 'With a small shared shift or few signatures, treating signatures as independent costs little coverage. Raise ω or K to see the intervals shrink below their nominal level.']
+    };
+  }
+};
+
 /* ---------- widget: the orthogonal patient-effect model (comparison) ---------- */
 const patient = {
   id: 'patient-effect',
   title: 'The orthogonal patient-effect model (comparison)',
-  eq: 'Xᵀu = 0, u = σ<sub>u</sub>·Bη, B from the SVD null space of X',
+  eq: '<span data-term="orth">Xᵀu = 0</span>, <span data-term="u">u = σ<sub>u</sub>·Bη</span>, <span data-term="B">B from the SVD null space of X</span>',
+  terms: {
+    orth: ['Orthogonality constraint', 'The patient effects u are forced to be uncorrelated with BMI, age and sex (the design X). They can only absorb variation the covariates do not explain.'],
+    u: ['One patient effect for all features', 'Each patient gets a single shift u<sub>i</sub>, shared by every signature in every cell type, with scale σ<sub>u</sub>. The Student-t intercept model instead gives each patient one shift per cell type.'],
+    B: ['Basis', 'B spans the directions left over after removing BMI, age and sex. 127 patients minus 4 design columns leaves 123 basis coefficients η.']
+  },
   ref: 'Comparison model, Supplementary Methods',
   blurb: 'In the comparison model, Equation 3 carries one patient effect u shared by all features, built on a basis orthogonal to BMI, age and sex. It cannot absorb anything the covariates explain. The cost is shown here: a BMI-linked shift shared by every signature has nowhere to go but the slopes. In simulation this model covered the true effects only 50 to 66% of the time.',
   note: 'The continuous design has rank four, giving 123 basis coefficients for 127 patients. Each patient effect enters every feature with loading one, and the scaling makes the average prior variance equal σᵤ². The basis was fixed before low-read exclusions, so orthogonality holds exactly in the full cohort and only approximately among the patients retained for a given cell type.',
@@ -1295,13 +1382,14 @@ const PROVENANCE = {
   'contrast':      ['mixed', 'Published estimates on request', 'Opens on illustrative values. Load a real programme from the selector above.'],
   'simulation':    ['mixed', 'Published metrics, simulated draw', 'The dataset is generated live from the notebook\u2019s model; the RMSE and coverage bars are published.'],
   'student-t':     ['exact', 'Exact formula', 'The weight curve is the likelihood itself, not a data summary.'],
+  'intercept':     ['exact', 'Exact formula', 'Coverage is computed from the variance of a cell-type mean; no patient data are used.'],
   'cellular':      ['illustrative', 'Simulated cohort', 'Patient-level data is controlled access, so the 127 patients here are generated from the study\u2019s cohort structure.'],
   'patient-effect':['illustrative', 'Simulated cohort', 'Comparison model. Patient-level data is controlled access; the orthogonality shown is exact arithmetic on generated patients.'],
   'plex':          ['illustrative', 'Simulated cohort', 'Patient-level data is controlled access, so plex membership and scores here are generated.'],
   'heatmap':       ['illustrative', 'Illustrative grid', 'The published cell-type by signature grid is too sparse to fill; shrinkage shown is the exact conjugate result.']
 };
 
-export const EXPLAINERS = [cellular, pooling, heatmap, support, patient, plex, contrast, conditioning, funnel, widening, studentT, simulation];
+export const EXPLAINERS = [cellular, intercept, pooling, heatmap, support, patient, plex, contrast, conditioning, funnel, widening, studentT, simulation];
 
 /* ---------- mount ---------- */
 export function mountExplainer(root, id) {
@@ -1315,7 +1403,41 @@ export function mountExplainer(root, id) {
   head.append(h('p', spec.ref, { class: 'xp-ref' }));
   const eqMain = h('p', undefined, { class: 'xp-eqmain' });
   eqMain.innerHTML = spec.eq;
-  head.append(eqMain, h('p', spec.blurb, { class: 'xp-blurb' }));
+  head.append(eqMain);
+  if (spec.terms) {
+    // Each part of the equation opens a speech bubble explaining it.
+    const bubble = h('div', undefined, { class: 'xp-bubble', role: 'dialog', 'aria-live': 'polite' });
+    bubble.hidden = true;
+    let open = null;
+    const close = () => { bubble.hidden = true; if (open) open.setAttribute('aria-expanded', 'false'); open = null; };
+    const show = term => {
+      const [title, text] = spec.terms[term.dataset.term] || [];
+      if (!title) return;
+      if (open === term) { close(); return; }
+      close();
+      bubble.replaceChildren(h('strong', title));
+      const body = h('span'); body.innerHTML = text; bubble.append(body);
+      bubble.hidden = false; open = term; term.setAttribute('aria-expanded', 'true');
+      const hr = head.getBoundingClientRect(), tr = term.getBoundingClientRect();
+      const left = Math.max(0, Math.min(tr.left - hr.left + tr.width / 2 - 150, hr.width - 300));
+      bubble.style.left = left + 'px';
+      bubble.style.top = (tr.bottom - hr.top + 10) + 'px';
+      bubble.style.setProperty('--tail', Math.max(14, Math.min(286, tr.left - hr.left + tr.width / 2 - left)) + 'px');
+    };
+    for (const term of eqMain.querySelectorAll('[data-term]')) {
+      term.classList.add('xp-term');
+      term.setAttribute('tabindex', '0');
+      term.setAttribute('role', 'button');
+      term.setAttribute('aria-expanded', 'false');
+      term.title = 'Click for an explanation';
+      term.addEventListener('click', e => { e.stopPropagation(); show(term); });
+      term.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(term); } });
+    }
+    document.addEventListener('click', e => { if (open && !bubble.contains(e.target)) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    head.append(bubble, h('p', 'Click any part of the equation for an explanation.', { class: 'xp-termhint' }));
+  }
+  head.append(h('p', spec.blurb, { class: 'xp-blurb' }));
   root.append(head);
 
   const realWrap = h('div', undefined, { class: 'xp-real' });
