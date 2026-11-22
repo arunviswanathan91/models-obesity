@@ -12,7 +12,8 @@ main{padding:0 4%;grid-template-columns:250px minmax(0,1fr)}aside{padding-top:24
 #download-contact{max-width:460px;width:calc(100% - 48px);padding:28px;border:1px solid #d9e2e2;border-radius:10px;color:#202727;line-height:1.65}#download-contact::backdrop{background:rgba(16,33,33,.35)}#download-contact h2{font-size:22px;margin-top:0}#download-contact a{color:#157977}#download-contact-close{margin-top:12px}
 .collection-bar{flex-wrap:wrap;gap:.5rem}
 
-#reference-views:not([hidden]) {display:flex;gap:.5rem;margin:1rem 0}
+#reference-views:not([hidden]) {display:flex;flex-wrap:wrap;align-items:flex-start;gap:.5rem;margin:0 0 1rem}
+#reference-views button {flex:0 0 auto;width:auto;height:auto;padding:.5rem .9rem}
 #reference-views button[aria-pressed="true"] {background:#16595d;color:white}
 .theta-panels {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:1.5rem;margin:1rem 0}
 .theta-panels section {min-width:0;border-top:1px solid #d1dbda;padding-top:.75rem}
