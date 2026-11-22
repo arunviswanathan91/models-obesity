@@ -13,7 +13,7 @@
 /* Sliders sit beside the figure, not in a separate panel. */
 .xp-stage{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,250px);gap:22px;align-items:start;
   border:1px solid var(--line);border-radius:8px;padding:16px;background:#fcfdfd}
-.xp-figure{min-width:0}
+.xp-figure{min-width:0;position:relative}
 .xp-figure svg{width:100%;height:auto;display:block}
 .xp-live{margin:0 0 10px;font-size:15px;padding:8px 12px;background:var(--soft);border-radius:6px;
   border-left:3px solid var(--teal);overflow-wrap:anywhere}
@@ -101,3 +101,14 @@
 @media(max-width:860px){.xp-cmp-grid{grid-template-columns:1fr}}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .xp-cmp-bar,:root:not([data-theme="light"]) .xp-cmp-panel{background:#161E22}}
 .xp-cmp-panel .xp-live{min-height:3.6em;display:flex;align-items:center}
+
+/* loading popup over a figure window */
+.xp-figure-busy svg,.xp-figure-busy .xp-live{opacity:.35;transition:opacity .2s}
+.xp-loading{position:absolute;inset:0;z-index:15;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.55);border-radius:8px}
+.xp-loading-card{display:grid;justify-items:center;gap:6px;text-align:center;max-width:290px;padding:18px 22px;background:#fff;border:1px solid var(--teal,#0E7C7B);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.14);font-size:13.5px}
+.xp-loading-card strong{color:var(--teal,#0E7C7B)}
+.xp-loading-sub{font-size:12px;color:var(--grey,#6F7378);line-height:1.45}
+.xp-spinner{width:26px;height:26px;border:3px solid var(--line,#DCDDE0);border-top-color:var(--teal,#0E7C7B);border-radius:50%;animation:xp-spin .8s linear infinite}
+@keyframes xp-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.xp-spinner{animation:none;border-top-color:var(--teal,#0E7C7B);border-right-color:var(--teal,#0E7C7B)}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .xp-loading{background:rgba(16,22,26,.6)}:root:not([data-theme="light"]) .xp-loading-card{background:#161E22}}

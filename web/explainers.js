@@ -1836,6 +1836,32 @@ export function mountExplainer(root, id) {
     realWrap.hidden = false;
   }
   update();
-  if (spec.usesData) loadExplainerData().then(() => { buildReal(); update(); });
+  if (spec.usesData) {
+    // A popup over the figure window while the published numbers are fetched.
+    const pop = DATA === null ? loadingPopup(figure) : null;
+    loadExplainerData().then(d => {
+      buildReal(); update();
+      if (pop) pop.done(!!d);
+    });
+  }
   return update;
+}
+
+/* Loading popup centred on a figure window. Shows only while a real fetch is pending. */
+function loadingPopup(figure) {
+  figure.classList.add('xp-figure-busy');
+  const box = h('div', undefined, { class: 'xp-loading', role: 'status', 'aria-live': 'polite' });
+  const card = h('div', undefined, { class: 'xp-loading-card' });
+  card.append(h('span', undefined, { class: 'xp-spinner', 'aria-hidden': 'true' }), h('strong', 'Loading published estimates'), h('span', 'Fetching the figures for this equation from the Atlas.', { class: 'xp-loading-sub' }));
+  box.append(card);
+  figure.append(box);
+  return {
+    done(ok) {
+      if (ok) { box.remove(); figure.classList.remove('xp-figure-busy'); return; }
+      card.replaceChildren(h('strong', 'Published values could not be loaded'), h('span', 'The figure shows illustrative values instead. Reload the page to try again.', { class: 'xp-loading-sub' }));
+      const close = h('button', 'OK', { type: 'button', class: 'xp-pre' });
+      close.addEventListener('click', () => { box.remove(); figure.classList.remove('xp-figure-busy'); });
+      card.append(close);
+    }
+  };
 }
