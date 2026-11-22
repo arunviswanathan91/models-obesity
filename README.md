@@ -5,7 +5,7 @@ Analysis code and an interactive results atlas for BMI-associated RNA programmes
 **[Open the PDAC Obesity Atlas](https://kbh-lab-rgcb.github.io/models-obesity/)** · **[KBH Lab](https://kbh-lab-rgcb.github.io/)**
 
 [![PDAC Obesity Atlas: RNA results and analysis collections](docs/atlas.jpg)](https://kbh-lab-rgcb.github.io/models-obesity/)
-
+[![DOI](https://zenodo.org/badge/1402881228.svg)](https://doi.org/10.5281/zenodo.24449133)
 The atlas provides aggregate effect estimates, uncertainty intervals, model diagnostics, gene signatures, deconvolution QC, simulations and manuscript supporting data. Figures are generated from the selected database records using the study's Python plotting code.
 
 ## Analysis index
