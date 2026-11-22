@@ -1,3 +1,4 @@
+import json
 # Heatmap renderer copied verbatim from the original BiB figure report.
 # Browser adapter supplies the same columns; no replacement heatmap algorithm.
 import matplotlib
@@ -430,6 +431,39 @@ def render(request_json):
         ax.set_xlim(0,1);ax.set_xlabel('Fraction assigned to dominant cluster');ax.set_ylabel('Cell type / state')
         ax.set_title(title,loc='left',fontsize=11);fig.tight_layout()
         note='Within-type cluster concentration, not tumour purity or deconvolution accuracy. A value of 1 does not rule out two cell types sharing a cluster. The saved purity table does not identify preprocessing mode.'
+    elif kind in ('theta_trend', 'theta_groups'):
+        if len(df) != 1:
+            raise ValueError('Choose one deconvolution family and one component before drawing.')
+        r = df.iloc[0]
+        parse = lambda v: json.loads(v) if isinstance(v, str) else v
+        pts = parse(r['trend'] if kind == 'theta_trend' else r['groups'])
+        if not pts:
+            raise ValueError('No values stored for this component.')
+        lo = np.array([float(p['low']) for p in pts]); hi = np.array([float(p['high']) for p in pts])
+        med = np.array([float(p['median']) for p in pts]); n = [int(p['n']) for p in pts]
+        vals = np.concatenate([lo, hi, med]); vals = vals[vals > 0]
+        logy = len(vals) and vals.max() / max(vals.min(), 1e-12) > 100
+        fig, ax = plt.subplots(figsize=(7.2, 4.6))
+        if kind == 'theta_trend':
+            x = np.array([float(p['bmi']) for p in pts])
+            ax.fill_between(x, lo, hi, color=TEAL, alpha=.18, lw=0)
+            ax.plot(x, med, color=TEAL, marker='o', lw=2)
+            ax.set_xlabel('BMI (kg/m², binned)')
+            note = (f"Median θ and spread per BMI bin ({', '.join(map(str, n))} patients). "
+                    f"Spearman ρ = {float(r['rho']):.3f}, p = {float(r['continuous_p']):.3g}, q = {float(r['continuous_q']):.3g}.")
+        else:
+            names = [str(p['name']).replace('_', ' ') for p in pts]
+            x = np.arange(len(pts))
+            ax.vlines(x, lo, hi, color=TEAL, lw=3, alpha=.5)
+            ax.scatter(x, med, color=TEAL, s=60, zorder=3)
+            ax.set_xticks(x, labels=[f'{a}\n(n={b})' for a, b in zip(names, n)])
+            note = (f"Median θ and spread per WHO group. Kruskal–Wallis H = {float(r['h']):.2f}, "
+                    f"p = {float(r['group_p']):.3g}, q = {float(r['group_q']):.3g}.")
+        if logy:
+            ax.set_yscale('log'); note += ' Log scale: θ spans more than two orders of magnitude.'
+        ax.set_ylabel('θ (fraction of bulk expression)')
+        ax.set_title(title, loc='left', fontsize=11); ax.grid(axis='y', alpha=.4); fig.tight_layout()
+        note += ' Descriptive; θ near 1e-6 means BayesPrism assigned almost no expression to that component.'
     elif kind in ('scree','contributions','annotation'):
         fields = ['compartment','analysis_set'] if kind == 'scree' else ['compartment','analysis_set','PC'] if kind == 'contributions' else ['reference','resolution']
         for field in fields:
