@@ -212,7 +212,7 @@ const pooling = {
   id: 'pooling',
   title: 'Partial pooling and the 95% HDI',
   eq: 'β<sub>j</sub> ~ Normal(μ<sub>c(j)</sub>, τ<sup>2</sup>)',
-  ref: 'Equations 4–5, decision rule',
+  ref: 'Equation 4, decision rule',
   blurb: 'Signature slopes are shrunk towards their cell-type mean. Raise τ and the model trusts each signature on its own; lower it and weakly supported signatures are pulled in. The widening slider applies the paper’s correction for simulated undercoverage.',
   note: 'An HDI excluding zero is directional support under the model, with no multiplicity control and no minimum effect size. Simulated residual correlation among signatures gave about 84.6% coverage, so named associations were re-checked after widening each interval by 1.960/1.426 ≈ 1.37. Rows are 12 published slopes spread from the strongest to the weakest survivor; the noise multiplier is a what-if, because the published SEs are all small relative to τ and shrinkage is nearly invisible at ×1.',
   params: [
@@ -457,7 +457,7 @@ const heatmap = {
   id: 'heatmap',
   title: 'Shrinkage across the signature catalog',
   eq: 'β̂<sub>j</sub> = (β<sub>j</sub>/σ<sub>j</sub><sup>2</sup> + μ<sub>c</sub>/τ<sup>2</sup>) / (1/σ<sub>j</sub><sup>2</sup> + 1/τ<sup>2</sup>)',
-  ref: 'Equations 4–5',
+  ref: 'Equation 4',
   blurb: 'The same pooling, seen across every cell type at once. Lower τ and the grid cools towards each cell type’s own mean; raise it and each signature keeps its own estimate. Cells outlined in white are those whose 95% HDI excludes zero.',
   note: 'A cell-type mean summarises the catalog signatures for that cell type. It measures neither the abundance of those cells nor their total activation. Values shown are illustrative; wire the grid to atlas_web_rows to display real posterior means.',
   params: [
@@ -607,19 +607,19 @@ const axes = (svg, L, R, T, B, xlab, ylab) => {
   c.textContent = ylab; svg.append(c);
 };
 
-/* ---------- widget: the cellular model, Equations 2-3 ---------- */
+/* ---------- widget: the cellular model, Equations 2-5 ---------- */
 const cellular = {
   id: 'cellular',
-  title: 'The cellular RNA model',
-  eq: 'S<sub>ij</sub> ~ t<sub>ν</sub>(μ<sub>ij</sub>, σ<sub>j</sub>), μ<sub>ij</sub> = α<sub>j</sub> + β<sub>j</sub>BMI<sub>i</sub> + γ<sub>j</sub>age<sub>i</sub> + δ<sub>j</sub>sex<sub>i</sub> + u<sub>i</sub>',
-  ref: 'Equations 2–3',
-  blurb: 'One signature score, one patient at a time. Every term is a separate contribution to the fitted mean, and only β is the BMI association. Move the highlighted patient along the cohort to see how the same slope produces very different scores.',
-  note: 'BMI and age are standardized; sex is coded −0.5 female, +0.5 male. Reported slopes are posterior draws multiplied by 5/sᴮᴹᴵ for a 5 kg/m² increase, with the cohort SD 4.462 kg/m². Age is confounded with BMI by construction in the simulation (correlation 0.2 by default, 0.65 in the confounding scenario), which is why the age term is adjusted for rather than ignored. Scores are conditionally independent given these effects; deconvolution and score-construction uncertainty are not propagated.',
+  title: 'The cellular RNA model (Student-t intercept)',
+  eq: 'Y<sub>ij</sub> ~ t<sub>ν</sub>(μ<sub>ij</sub>, σ<sub>j</sub>), μ<sub>ij</sub> = α<sub>j</sub> + β<sub>j</sub>BMI<sub>i</sub> + γ<sub>j</sub>age<sub>i</sub> + δ<sub>j</sub>sex<sub>i</sub> + v<sub>i,c(j)</sub>, v<sub>ic</sub> ~ t<sub>ν<sub>v</sub></sub>(0, ω<sub>c</sub>)',
+  ref: 'Equations 2–5',
+  blurb: 'One signature score, one patient at a time. Every term adds to the fitted mean, and only β is the BMI association. The term v is a patient × cell-type intercept: one shift shared by all signatures of that cell type in that patient. Move the highlighted patient along the cohort to see how the same slope gives very different scores.',
+  note: 'BMI and age are standardized; sex is coded −0.5 female, +0.5 male. Reported slopes are posterior draws multiplied by 5/sᴮᴹᴵ for a 5 kg/m² increase, with the cohort SD 4.462 kg/m². BMI slopes are pooled within cell types, β<sub>j</sub> ~ N(m<sub>c</sub>, τ<sub>c</sub>²), with m<sub>c</sub> ~ N(0, 0.20²) and τ<sub>c</sub> ~ HalfNormal(0.30). The intercept v has a Student-t distribution with ω<sub>c</sub> ~ HalfNormal(0.50) and ν<sub>v</sub> − 2 ~ Exponential(0.10); here it is drawn with ν = 4. Because v enters once per patient and cell type, a shift shared by many signatures is not counted as many separate pieces of evidence. Deconvolution and score-construction uncertainty are not propagated.',
   params: [
     { k: 'beta',  label: 'β<sub>j</sub> BMI slope', min: -0.8, max: 0.8, step: 0.01, value: 0.30, colour: MAGENTA, hint: 'The quantity the paper reports.' },
     { k: 'gamma', label: 'γ<sub>j</sub> age coefficient', min: -0.5, max: 0.5, step: 0.01, value: 0.12, colour: BLUE, hint: 'Adjusted for, because age correlates with BMI.' },
     { k: 'delta', label: 'δ<sub>j</sub> sex coefficient', min: -0.5, max: 0.5, step: 0.01, value: -0.08, colour: BLUE, hint: 'Sex is centred, so this is the male minus female difference.' },
-    { k: 'su',    label: 'σ<sub>u</sub> patient effect SD', min: 0, max: 1, step: 0.01, value: 0.35, colour: TEAL, hint: 'Spread of the shared patient effect. Prior HalfNormal(0.5).' },
+    { k: 'su',    label: 'ω<sub>c</sub> intercept scale', min: 0, max: 1, step: 0.01, value: 0.35, colour: TEAL, hint: 'Scale of the patient × cell-type intercept. Prior HalfNormal(0.5).' },
     { k: 'sigma', label: 'σ<sub>j</sub> residual scale', min: 0.1, max: 1.4, step: 0.01, value: 0.65, colour: GREY, hint: 'Student-t scale. The simulation centres this at 0.65.' },
     { k: 'who',   label: 'highlighted patient', min: 0, max: 126, step: 1, value: 96, colour: TEAL, fmt: x => '#' + (x + 1), hint: 'Pick a patient to decompose their fitted score.' }
   ],
@@ -627,12 +627,14 @@ const cellular = {
     { label: 'Reference', v: { beta: 0.30, gamma: 0.12, delta: -0.08, su: 0.35, sigma: 0.65 } },
     { label: 'Null', v: { beta: 0, gamma: 0.12, delta: -0.08, su: 0.35, sigma: 0.65 } },
     { label: 'Noise dominates', v: { beta: 0.30, gamma: 0.12, delta: -0.08, su: 0.35, sigma: 1.3 } },
-    { label: 'Strong patient effect', v: { beta: 0.30, gamma: 0.12, delta: -0.08, su: 0.9, sigma: 0.45 } }
+    { label: 'Strong intercept', v: { beta: 0.30, gamma: 0.12, delta: -0.08, su: 0.9, sigma: 0.45 } }
   ],
   init() {
     const c = cohort([52, 57, 18], 0.2, 20260926);
     const r = lcg(515151);
-    return { c, u: Array.from({ length: c.n }, () => r.n()), e: Array.from({ length: c.n }, () => r.n()) };
+    // Student-t draws with 4 degrees of freedom for the patient x cell-type intercept.
+    const t4 = () => r.n() / Math.sqrt((r.n() ** 2 + r.n() ** 2 + r.n() ** 2 + r.n() ** 2) / 4);
+    return { c, u: Array.from({ length: c.n }, t4), e: Array.from({ length: c.n }, () => r.n()) };
   },
   draw(svg, v, mem) {
     const { c, u, e } = mem, who = Math.min(c.n - 1, Math.round(v.who));
@@ -669,7 +671,7 @@ const cellular = {
       ['β·BMI', v.beta * c.z[who], MAGENTA],
       ['γ·age', v.gamma * c.age[who], BLUE],
       ['δ·sex', v.delta * c.sex[who], BLUE],
-      ['u (patient)', v.su * u[who], TEAL],
+      ['v (patient × cell type)', v.su * u[who], TEAL],
       ['residual', v.sigma * e[who], GREY]
     ];
     const biggest = parts.reduce((a, p) => Math.abs(p[1]) > Math.abs(a[1]) ? p : a);
@@ -679,7 +681,7 @@ const cellular = {
       cards: [
         ['β·BMI', minus(parts[0][1]), 'the reported effect', true],
         ['γ·age + δ·sex', minus(parts[1][1] + parts[2][1]), 'adjusted away'],
-        ['u<sub>i</sub> patient effect', minus(parts[3][1]), 'shared by all features'],
+        ['v<sub>i,c</sub> intercept', minus(parts[3][1]), 'shared within the cell type'],
         ['residual', minus(parts[4][1]), 'Student-t noise']
       ],
       verdict: Math.abs(parts[0][1]) >= Math.abs(biggest[1])
@@ -689,13 +691,13 @@ const cellular = {
   }
 };
 
-/* ---------- widget: the orthogonal patient effect, Equation 5 ---------- */
+/* ---------- widget: the orthogonal patient-effect model (comparison) ---------- */
 const patient = {
   id: 'patient-effect',
-  title: 'The orthogonal patient effect',
+  title: 'The orthogonal patient-effect model (comparison)',
   eq: 'Xᵀu = 0, u = σ<sub>u</sub>·Bη, B from the SVD null space of X',
-  ref: 'Equation 5 and the Limitations',
-  blurb: 'The patient effect is built on a basis orthogonal to the design, so it cannot absorb anything the covariates explain. That is deliberate — but it has a consequence the paper states openly, and this is it.',
+  ref: 'Comparison model, Supplementary Methods',
+  blurb: 'In the comparison model, Equation 3 carries one patient effect u shared by all features, built on a basis orthogonal to BMI, age and sex. It cannot absorb anything the covariates explain. The cost is shown here: a BMI-linked shift shared by every signature has nowhere to go but the slopes. In simulation this model covered the true effects only 50 to 66% of the time.',
   note: 'The continuous design has rank four, giving 123 basis coefficients for 127 patients. Each patient effect enters every feature with loading one, and the scaling makes the average prior variance equal σᵤ². The basis was fixed before low-read exclusions, so orthogonality holds exactly in the full cohort and only approximately among the patients retained for a given cell type.',
   params: [
     { k: 'su',    label: 'σ<sub>u</sub> patient effect SD', min: 0, max: 1.2, step: 0.01, value: 0.5, colour: TEAL, hint: 'Prior HalfNormal(0.5).' },
@@ -1286,15 +1288,15 @@ const support = {
 /* ---------- data provenance, shown beside every figure ---------- */
 const PROVENANCE = {
   'screen':        ['published', 'Published counts', 'Funnel, transition matrix and gene counts are the study\u2019s own figures.'],
-  'widening':      ['published', 'Published estimates', 'All 914 cellular slopes and their HDIs, with the correction applied live.'],
+  'widening':      ['published', 'Orthogonal patient-effect estimates', 'All 914 cellular slopes and their HDIs from the orthogonal patient-effect model, with the correction applied live. Student-t intercept estimates are in the RNA collections.'],
   'support':       ['published', 'Published metrics', 'Allocated-read totals and gate tiers per deconvolution component.'],
-  'pooling':       ['published', 'Published estimates', 'Twelve published slopes, strongest to weakest survivor. The noise multiplier is a what-if.'],
+  'pooling':       ['published', 'Orthogonal patient-effect estimates', 'Twelve slopes from the orthogonal patient-effect model, strongest to weakest survivor. The noise multiplier is a what-if.'],
   'conditioning':  ['mixed', 'Published estimates on request', 'Opens on the paper\u2019s calibration scenarios. Load a real feature from the selector above.'],
   'contrast':      ['mixed', 'Published estimates on request', 'Opens on illustrative values. Load a real programme from the selector above.'],
   'simulation':    ['mixed', 'Published metrics, simulated draw', 'The dataset is generated live from the notebook\u2019s model; the RMSE and coverage bars are published.'],
   'student-t':     ['exact', 'Exact formula', 'The weight curve is the likelihood itself, not a data summary.'],
   'cellular':      ['illustrative', 'Simulated cohort', 'Patient-level data is controlled access, so the 127 patients here are generated from the study\u2019s cohort structure.'],
-  'patient-effect':['illustrative', 'Simulated cohort', 'Patient-level data is controlled access; the orthogonality shown is exact arithmetic on generated patients.'],
+  'patient-effect':['illustrative', 'Simulated cohort', 'Comparison model. Patient-level data is controlled access; the orthogonality shown is exact arithmetic on generated patients.'],
   'plex':          ['illustrative', 'Simulated cohort', 'Patient-level data is controlled access, so plex membership and scores here are generated.'],
   'heatmap':       ['illustrative', 'Illustrative grid', 'The published cell-type by signature grid is too sparse to fill; shrinkage shown is the exact conjugate result.']
 };
