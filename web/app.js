@@ -1,3 +1,4 @@
+import {renderTheta} from './theta.js';
 import {CONFIG} from './config.js';
 import {EXPLAINERS,mountExplainer} from './explainers.js';
 import {PROGRAMME_LABELS} from './programme-labels.js';
@@ -34,6 +35,7 @@ function brief(d){
  if(d.section==='equations')return d.description;
  if(d.run_key==='manuscript_ptm_20261004')return d.description;
  if(d.kind==='signatures')return 'Gene sets used to score biological programmes within cell types.';
+ if(d.kind==='theta_bmi')return d.description;
  if(d.kind==='pca_original')return 'Original PCA figures for three deconvolution compartments.';
  if(d.kind==='diagnostics')return 'Sampling precision, chain agreement and predictive checks.';
  if(d.kind==='effects')return 'BMI associations with pointwise 95% posterior intervals.';
@@ -46,6 +48,7 @@ function explain(d){
  if(d.section==='equations')return d.description;
  if(d.run_key==='manuscript_ptm_20261004')return d.description;
  if(d.kind==='signatures')return 'A signature is a named group of genes representing a biological process. Browse its member genes and compare the number of genes across signatures within a cell type.';
+ if(d.kind==='theta_bmi')return d.description;
  if(d.kind==='pca_original')return 'Principal component analysis (PCA) places similar expression profiles near one another. Choose a compartment to inspect separation among its cell types.';
  if(d.kind==='effects'&&d.cellular_model==='student_t_intercept')return 'Estimates from the Student-t patient × cell-type intercept model, the primary cellular model. The estimate gives the direction and size of the BMI association and the 95% highest-density interval (HDI) its uncertainty. p positive is the posterior probability that the effect is above zero; lfsr, the local false sign rate, is the smaller of p positive and 1 − p positive. Neither the HDI nor lfsr controls false discoveries on its own.';
  if(d.kind==='effects'&&d.cellular_model==='orthogonal_patient_effect')return 'Estimates from the orthogonal patient-effect model, kept for comparison. In the simulation its 95% intervals covered the true effects only 50 to 66% of the time, so its intervals are too narrow. Use the Student-t intercept model for interpretation.';
@@ -85,7 +88,10 @@ function availableCollections(section){return state.catalog.filter(d=>d.section=
 function changeSection(section,preferred){
  fade($('results')); 
  if(['manuscript','simulation','reference','signatures','single_cell'].includes(section)&&state.mode!=='advanced'){state.mode='advanced';updateModeUI();}
- state.section=section;for(const b of $('sections').children)b.setAttribute('aria-selected',b.dataset.section===section);
+ state.section=section;
+ $('reference-views').hidden=section!=='reference';
+ $('theta-panel').hidden=true;
+ for(const b of $('sections').children)b.setAttribute('aria-selected',b.dataset.section===section);
  $('rna-navigation').hidden=state.mode==='advanced'||section!=='rna';
  const choices=availableCollections(section);const defaultId=section==='ptm'&&state.mode!=='reliability'&&choices.some(d=>d.id==='ptm/effects')?'ptm/effects':section==='reference'?'reference/pca_original':state.mode==='reliability'?(choices.find(d=>d.id==='rna/compartment_diagnostics')?.id||choices.find(d=>/run_diagnostics|fit_status|run_status/.test(d.id))?.id):choices.find(d=>d.kind==='effects')?.id||choices.find(d=>d.kind==='comparison')?.id;
  options($('dataset'),choices.map(d=>[d.id,state.mode==='advanced'?d.title:(section==='rna'&&cellularModel()==='compare'&&d.kind==='diagnostics'?modelLabel[runParts(d.run_key).model]+' · ':'')+collectionLabel(d)]),choices.some(d=>d.id===preferred)?preferred:choices.some(d=>d.id===defaultId)?defaultId:choices[0]?.id);
@@ -97,7 +103,10 @@ function updateModeUI(){for(const b of document.querySelectorAll('[data-mode]'))
 function setMode(mode){if(mode!=='advanced'&&['manuscript','reference','signatures','single_cell','simulation'].includes(state.section))state.section='rna';state.mode=mode;$('collection-search').value='';syncRunControls(state.dataset);updateModeUI();changeSection(state.section,state.dataset?.id);}
 async function loadDataset(){
  const version=++state.version;state.dataset=state.catalog.find(d=>d.id===$('dataset').value);if(!state.dataset)return;
- const d=state.dataset;$('pca-panel').hidden=true;$('signature-detail').hidden=true;$('explainer-panel').hidden=true;document.querySelector('.filter-card').hidden=false;document.querySelector('.viewbar').hidden=false;$('table-panel').hidden=false;$('analysis-explanation').textContent=explain(d);$('download-json').hidden=d.kind!=='signatures';$('download-json').disabled=true;$('search').disabled=false;$('reset').disabled=false;state.rows=[];state.filtered=[];state.facets={};state.page=0;clearFigure();$('search').value='';$('include-failed').checked=false;$('download').disabled=true;$('facets').replaceChildren();$('extra-facets').replaceChildren();$('diagnostic-panel').hidden=true;$('draw').disabled=true;$('tbody').replaceChildren();$('thead').replaceChildren();
+ const d=state.dataset;
+ $('theta-panel').hidden=true;
+ for(const b of $('reference-views').querySelectorAll('button')) b.setAttribute('aria-pressed',String(b.dataset.collection===d.id));
+ $('pca-panel').hidden=true;$('signature-detail').hidden=true;$('explainer-panel').hidden=true;document.querySelector('.filter-card').hidden=false;document.querySelector('.viewbar').hidden=false;$('table-panel').hidden=false;$('analysis-explanation').textContent=explain(d);$('download-json').hidden=d.kind!=='signatures';$('download-json').disabled=true;$('search').disabled=false;$('reset').disabled=false;state.rows=[];state.filtered=[];state.facets={};state.page=0;clearFigure();$('search').value='';$('include-failed').checked=false;$('download').disabled=true;$('facets').replaceChildren();$('extra-facets').replaceChildren();$('diagnostic-panel').hidden=true;$('draw').disabled=true;$('tbody').replaceChildren();$('thead').replaceChildren();
  const rp=d.section==='rna'?runParts(d.run_key):null;$('dataset-title').textContent=state.mode==='advanced'||d.run_key==='overview'||d.run_key==='compare_rna'||!rp||!runLabel[rp.compartment]?d.title:runLabel[rp.compartment]+(rp.categorical?' categorical':'')+' · '+(rp.model==='compare'?'':modelLabel[rp.model]+' · ')+collectionLabel(d);$('dataset-description').textContent=brief(d);$('section-label').textContent=sections.find(s=>s[0]===d.section)[1];const comparisonModel=d.cellular_model==='orthogonal_patient_effect'&&d.section==='rna';$('notice').hidden=!d.provisional&&!comparisonModel;$('notice').textContent=[d.provisional?'Provisional analysis: interpret these fine-immune categorical results with the diagnostic evidence.':'',comparisonModel?'Comparison model. These estimates come from the orthogonal patient-effect model, whose intervals undercovered in simulation. The primary cellular estimates use the Student-t intercept model.':''].filter(Boolean).join(' ');
  if(d.kind==='pca_original'){showPCA();return;}
  if(d.kind==='explainer'){showExplainer(d);return;}
@@ -108,7 +117,12 @@ async function loadDataset(){
   if(!rows)rows=cache.get(cacheKey);
   if(!rows&&d.id==='rna/compartment_diagnostics'){rows=[];const models=cellularModel()==='compare'?['st','orth']:[cellularModel()];for(const model of models)for(const base of ['immune_coarse','immune_fine','nonimmune','categorical_immune_coarse','categorical_immune_fine','categorical_nonimmune']){const run=modelPrefix[model]+base;if(!state.catalog.some(c=>c.id===run+'/run_diagnostics'))continue;const ds=await api('atlas_web_rows',{select:'data',dataset_id:'eq.'+run+'/run_diagnostics',order:'row_number.asc',limit:10});if(version!==state.version)return;rows.push(...ds.map(x=>({...x.data,compartment:base.replace('categorical_',''),bmi_model:base.startsWith('categorical_')?'categorical':'continuous',cellular_model:modelLabel[model]})));}cache.set(cacheKey,rows);}
   if(!rows){rows=[];for(let offset=0;offset<d.row_count;offset+=1000){const page=await api('atlas_web_rows',{select:'row_number,data',dataset_id:'eq.'+d.id,order:'row_number.asc',limit:1000,offset});if(version!==state.version)return;if(!page.length)throw Error('Incomplete data response. Please retry.');rows.push(...page.map(x=>x.data));status('Loading results: '+number.format(rows.length)+' / '+number.format(d.row_count));}if(rows.length!==d.row_count)throw Error('The collection changed during loading. Please reload.');cache.set(d.id,rows);}
-  if(version!==state.version)return;state.rows=rows;$('include-failed').checked=d.kind==='diagnostics';buildFacets();applyFilters();view(plotTypes().length&&(state.mode==='biology'||state.view==='plot')?'plot':'table');$('view-plot').hidden=!plotTypes().length;status('');
+  if(version!==state.version)return;state.rows=rows;
+  if(d.kind==='theta_bmi'){
+   for(const selector of ['.filter-card','.viewbar','#table-panel','#plot-panel']) document.querySelector(selector).hidden=true;
+   $('theta-panel').hidden=false;renderTheta($('theta-panel'),rows);status('');return;
+  }
+  $('include-failed').checked=d.kind==='diagnostics';buildFacets();applyFilters();view(plotTypes().length&&(state.mode==='biology'||state.view==='plot')?'plot':'table');$('view-plot').hidden=!plotTypes().length;status('');
  }catch(e){if(version===state.version){status(e.message,true);$('result-count').textContent='';}}
 }
 const facetFields=['template','quantity','numerical_pass','bmi_model','cellular_model','method','estimand','job','interval_call','entity_level','variant','component','contrast','units','cell_type','assay','geometry','kind','rule','scenario','check','domain','parameter_family','compartment','analysis_set','PC','CellType','reference','resolution','scope','endpoint','cap','mode','layer','metric','comparison','family','stratum'];
@@ -314,6 +328,9 @@ function renderDiagnosticDistribution(spec,points){
 
 $('diagnostic-svg').onclick=()=>save(diagnosticSVG,'atlas_'+$('diagnostic-metric').value+'.svg','image/svg+xml');
 
+for(const button of $('reference-views').querySelectorAll('button')) button.onclick=()=>{
+ $('collection-search').value='';changeSection('reference',button.dataset.collection);
+};
 $('dataset').onchange=loadDataset;document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$('compartment').onchange=$('bmi-model').onchange=$('cellular-model').onchange=()=>changeSection(state.section);$('collection-search').oninput=()=>changeSection(state.section);$('diagnostic-metric').onchange=renderDiagnosticChart;$('search').oninput=applyFilters;$('include-failed').onchange=applyFilters;$('reset').onclick=()=>{$('search').value='';$('include-failed').checked=state.dataset?.kind==='diagnostics';buildFacets();applyFilters();};$('prev').onclick=()=>{state.page--;drawTable();};$('next').onclick=()=>{state.page++;drawTable();};$('view-table').onclick=()=>view('table');$('view-plot').onclick=()=>view('plot');$('plot-type').onchange=()=>{plotControls();schedulePlot();};for(const id of ['plot-x','plot-y','plot-limit'])$(id).onchange=schedulePlot;$('draw').onclick=drawPlot;
 for(const id of ['download-json','download','svg','png','pca-download','manifest-download','diagnostic-svg']) $(id).onclick=requestDownload;
 $('download-contact-close').onclick=()=> $('download-contact').close();
