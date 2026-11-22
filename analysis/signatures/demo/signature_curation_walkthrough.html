@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Signature curation walkthrough</title>
+<style>
+:root{--blue:#2C5AA0;--magenta:#D81B60;--teal:#0E7C7B;--ink:#1F1F1F;--grey:#6F7378;--line:#DCDDE0;--paper:#f7f8f8;--soft:#eaf4f3;--page:#fff}
+@media(prefers-color-scheme:dark){:root{--blue:#7FA6DC;--magenta:#F2779F;--teal:#4FC3BE;--ink:#E7ECEC;--grey:#9AA4A6;--line:#2A3338;--paper:#161C1F;--soft:#15302F;--page:#10161A}}
+*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font:14px/1.55 Arial,'Liberation Sans',sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:26px;font-weight:500;margin:4px 0 6px;letter-spacing:-.5px}.eyebrow{color:var(--teal);font-weight:700;font-size:13px;margin:0}
+.lede{color:var(--grey);max-width:68ch;margin:0 0 14px}
+.banner{border-left:3px solid var(--magenta);background:var(--paper);padding:9px 13px;margin:0 0 16px;font-size:13px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 16px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:6px;padding:7px 14px}
+button.primary{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}button:disabled{opacity:.45;cursor:default}
+button:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.count{color:var(--grey);font-size:12.5px;margin-left:auto}
+.ev{border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin:0 0 12px;background:var(--paper);animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.ev{animation:none}}
+.ev h3{margin:0 0 8px;font-size:15px;font-weight:600}.ev h3 small{color:var(--grey);font-weight:400}
+.phase{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--grey);margin:18px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 8px}.row{display:grid;grid-template-columns:150px 1fr;gap:8px;margin:5px 0;align-items:start}
+.row b{font-size:12px;color:var(--grey);font-weight:600}
+.chip{border-radius:4px;padding:1px 7px;font-size:12px;border:1px solid var(--line);background:var(--page)}
+.chip.sh{background:var(--teal);border-color:var(--teal);color:#fff}.chip.un{border-color:var(--blue);color:var(--blue)}
+.meter{position:relative;height:12px;background:var(--line);border-radius:6px;margin:8px 0 4px}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--blue)}.meter i.bad{background:var(--magenta)}
+.meter u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.cap{font-size:12px;color:var(--grey)}
+.say{border-left:3px solid var(--grey);padding:4px 10px;margin:8px 0;color:var(--grey);font-size:13px}
+.say em{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;display:block}
+.out{font-weight:600}.out.ok{color:var(--teal)}.out.no{color:var(--magenta)}
+.final{border-top:1px solid var(--line);padding-top:12px;margin-top:14px}
+code{background:var(--paper);padding:1px 5px;border-radius:4px;font-size:12.5px}
+@media(max-width:560px){.row{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<p class="eyebrow">PDAC Obesity Atlas · methods demonstration</p>
+<h1>How a signature catalogue is curated</h1>
+<p class="lede">A walkthrough of the rules used to review a catalogue of cell-type signatures: find redundant pairs, then screen proposed additions. Each change needs a person's decision.</p>
+<div class="banner"><strong>Scripted replay.</strong> The catalogue is a small toy example and the replies are fixed text written in advance. Nothing here calls a model, uses a key or needs a network. It runs the same overlap rules as <code>curate_signatures.py</code>.</div>
+<div class="bar"><button class="primary" id="step">Next step</button><button id="play">Play</button><button id="reset">Restart</button><span class="count" id="count"></span></div>
+<div id="log"></div></div>
+<script>
+const RUN = {
+  "_note": "Toy catalogue and scripted replies for the demonstration only. Gene lists are illustrative, not the manuscript catalogue. No model is called: every 'recommendation' and 'suggestion' below is fixed text.",
+  "catalogue": {
+    "TAM": {
+      "Lipid_Processing":  ["APOE","LPL","FABP4","CD36","PLIN2","LIPA","TREM2","APOC1"],
+      "Lipid_Metabolism":  ["APOE","LPL","FABP4","CD36","PLIN2","ABCA1","SCARB1"],
+      "Iron_Handling":     ["HMOX1","FTL","FTH1","SLC40A1","CD163","TFRC","NCOA4","FLVCR1","BLVRB","SLC11A1"],
+      "M2_Polarization":   ["MRC1","CD163","IL10","ARG1","TGFB1","CCL18","MSR1","STAB1"]
+    },
+    "CD8+ T cells": {
+      "Costimulation":          ["CD28","ICOS","TNFRSF9","TNFRSF4","CD27"],
+      "Costimulatory_Activity": ["CD28","ICOS","TNFRSF9","CD226","CD27","CD2"],
+      "Exhaustion":             ["PDCD1","HAVCR2","LAG3","TIGIT","TOX","CTLA4","ENTPD1","CXCL13"]
+    }
+  },
+  "dedup_replies": [
+    {"cell_type":"TAM","sig1":"Lipid_Processing","sig2":"Lipid_Metabolism","choice":4,
+     "reasoning":"Both describe lipid-laden macrophages; most genes are shared, so one merged signature is cleaner."},
+    {"cell_type":"CD8+ T cells","sig1":"Costimulation","sig2":"Costimulatory_Activity","choice":4,
+     "reasoning":"Near-identical biology under two names."}
+  ],
+  "dedup_decisions": {"TAM|Lipid_Processing|Lipid_Metabolism":4, "CD8+ T cells|Costimulation|Costimulatory_Activity":1},
+  "suggestions": {
+    "TAM": [
+      {"name":"Hypoxic_Adaptation","genes":["HIF1A","VEGFA","SLC2A1","BNIP3","LDHA","PGK1","ENO1","HMOX1","FTL","ANGPTL4"],"rationale":"Hypoxia-driven programme in tumour macrophages."},
+      {"name":"Foam_Cell_Lipid","genes":["APOE","LPL","FABP5","LIPA","PLIN2","NPC2","CTSD","GPNMB","SPP1","ACP5"],"rationale":"Lipid-laden state."}
+    ],
+    "CD8+ T cells": [
+      {"name":"Metabolic_Stress","genes":["HIF1A","PPARGC1A","SLC2A1","LDHA","CPT1A","ACADVL","GLUT3","MTOR","SIRT1","FOXO1"],"rationale":"Nutrient-stress state of exhausted T cells."},
+      {"name":"Cytokine_Response","genes":["PDCD1","IFNG","TNF","IL2","GZMB","PRF1"],"rationale":"Short list, shown only to illustrate the length rule."}
+    ]
+  },
+  "suggestion_decisions": {"TAM|Hypoxic_Adaptation":"y","TAM|Foam_Cell_Lipid":"y","CD8+ T cells|Metabolic_Stress":"y","CD8+ T cells|Cytokine_Response":"n"}
+}
+;
+const DEDUP = 0.50, NEWSIG = 0.20;
+const up = g => new Set(g.map(x => String(x).toUpperCase()));
+const ov = (a, b) => (!a.size || !b.size) ? 0 : [...a].filter(x => b.has(x)).length / Math.min(a.size, b.size);
+const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
+const chips = (genes, cls) => genes.length ? `<span class="chips">${genes.map(g => `<span class="chip ${cls}">${g}</span>`).join('')}</span>` : '<span class="cap">none, so this is a subset</span>';
+const pct = x => (x * 100).toFixed(0) + '%';
+const meter = (v, lim, bad) => `<div class="meter"><i class="${bad ? 'bad' : ''}" style="width:${Math.min(100, v * 100)}%"></i><u style="left:${lim * 100}%"></u></div><div class="cap">overlap coefficient ${v.toFixed(2)} · limit ${lim.toFixed(2)}</div>`;
+
+// build the whole run once, as a list of events, using the same rules as the Python replay
+function build() {
+  const cat = JSON.parse(JSON.stringify(RUN.catalogue)), ev = [], log = [];
+  const before = Object.values(cat).reduce((n, s) => n + Object.keys(s).length, 0);
+  ev.push({ phase: 'Phase 1 · redundancy review' });
+  const pairs = [];
+  for (const [cell, sigs] of Object.entries(cat)) { const n = Object.keys(sigs);
+    n.forEach((s1, i) => n.slice(i + 1).forEach(s2 => { const g1 = up(sigs[s1]), g2 = up(sigs[s2]), o = ov(g1, g2); if (o > DEDUP) pairs.push({ cell, s1, s2, g1, g2, o }); })); }
+  pairs.forEach((p, i) => {
+    if (!cat[p.cell][p.s1] || !cat[p.cell][p.s2]) return;
+    const r = RUN.dedup_replies.find(x => x.cell_type === p.cell && x.sig1 === p.s1 && x.sig2 === p.s2) || { choice: 3, reasoning: '' };
+    const d = RUN.dedup_decisions[`${p.cell}|${p.s1}|${p.s2}`];
+    const sh = [...p.g1].filter(x => p.g2.has(x)).sort(), u1 = [...p.g1].filter(x => !p.g2.has(x)).sort(), u2 = [...p.g2].filter(x => !p.g1.has(x)).sort();
+    const names = { 1: `kept ${p.s1}, deleted ${p.s2}`, 2: `kept ${p.s2}, deleted ${p.s1}`, 3: 'kept both', 4: `merged into ${p.s1}`, 5: `merged into ${p.s2}` };
+    if (d === 1) delete cat[p.cell][p.s2]; if (d === 2) delete cat[p.cell][p.s1];
+    if (d === 4) { cat[p.cell][p.s1] = [...new Set([...p.g1, ...p.g2])].sort(); delete cat[p.cell][p.s2]; }
+    if (d === 5) { cat[p.cell][p.s2] = [...new Set([...p.g1, ...p.g2])].sort(); delete cat[p.cell][p.s1]; }
+    log.push(`${p.cell}: ${names[d]}`);
+    ev.push({ html: `<h3>${p.cell}: ${p.s1} and ${p.s2} <small>pair ${i + 1} of ${pairs.length}</small></h3>
+      ${meter(p.o, DEDUP, p.o > DEDUP)}
+      <div class="row"><b>shared (${sh.length})</b>${chips(sh, 'sh')}</div>
+      <div class="row"><b>only in ${p.s1} (${u1.length})</b>${chips(u1, 'un')}</div>
+      <div class="row"><b>only in ${p.s2} (${u2.length})</b>${chips(u2, 'un')}</div>
+      <div class="say"><em>Scripted reply, no model called</em>Choice ${r.choice}. ${r.reasoning}</div>
+      <div class="say"><em>Scripted decision by the person</em>Choice ${d}: ${names[d]}</div>` });
+  });
+  ev.push({ phase: 'Phase 2 · missing-signature discovery' });
+  for (const cell of Object.keys(cat)) for (const s of (RUN.suggestions[cell] || [])) {
+    if (cat[cell][s.name]) continue;
+    const g = [...s.genes].sort(), nw = up(g);
+    const worstOf = Object.entries(cat[cell]).map(([k, v]) => [k, ov(nw, up(v))]).sort((a, b) => b[1] - a[1])[0];
+    const w = worstOf[1], rej = w > NEWSIG, d = RUN.suggestion_decisions[`${cell}|${s.name}`] || 'n';
+    let tail;
+    if (rej) tail = `<div class="out no">Rejected automatically. It overlaps ${worstOf[0]} too much, so the person never sees it.</div>`;
+    else { if (d === 'y') cat[cell][s.name] = g; log.push(d === 'y' ? `${cell}: added ${s.name}` : null);
+      tail = `<div class="say"><em>Scripted decision by the person</em>${d === 'y' ? 'Add it.' : 'Do not add it.'}</div>` +
+        (g.length < 8 || g.length > 12 ? `<div class="cap">Only ${g.length} genes. The 8–12 range is part of the request text; the script does not check it.</div>` : '') +
+        `<div class="out ${d === 'y' ? 'ok' : 'no'}">${d === 'y' ? 'Added to the catalogue' : 'Not added'}</div>`; }
+    ev.push({ html: `<h3>${cell}: proposed “${s.name}” <small>${g.length} genes</small></h3>${chips(g, 'un')}
+      ${meter(w, NEWSIG, rej)}<div class="cap">highest overlap is with ${worstOf[0]}. A value exactly equal to the limit passes.</div>
+      <div class="say"><em>Scripted text, no model called</em>${s.rationale}</div>${tail}` });
+  }
+  const after = Object.values(cat).reduce((n, s) => n + Object.keys(s).length, 0);
+  ev.push({ html: `<h3>Result</h3><p>${before} signatures before, ${after} after.</p><ul>${log.filter(Boolean).map(l => `<li>${l}</li>`).join('')}</ul>
+    <div class="final cap">The frozen manuscript catalogue was not rebuilt from a run like this. See <code>analysis/signatures/provenance.json</code>.</div>` });
+  return ev;
+}
+const EV = build(); let i = 0, timer = null;
+const logEl = document.getElementById('log'), step = document.getElementById('step'), play = document.getElementById('play'), count = document.getElementById('count');
+function next() { if (i >= EV.length) { stop(); return; } const e = EV[i++];
+  logEl.append(e.phase ? el('div', 'phase', e.phase) : el('div', 'ev', e.html));
+  const last = logEl.lastElementChild; last.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth' });
+  count.textContent = `step ${i} of ${EV.length}`; step.disabled = i >= EV.length; if (i >= EV.length) stop(); }
+function stop() { clearInterval(timer); timer = null; play.textContent = 'Play'; }
+step.onclick = next;
+play.onclick = () => { if (timer) { stop(); return; } if (i >= EV.length) return; play.textContent = 'Pause'; next(); timer = setInterval(next, 1600); };
+document.getElementById('reset').onclick = () => { stop(); logEl.replaceChildren(); i = 0; step.disabled = false; count.textContent = ''; next(); };
+next();
+</script></body></html>
