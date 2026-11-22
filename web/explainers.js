@@ -108,7 +108,13 @@ const precisionMean = rows =>
 const conditioning = {
   id: 'conditioning',
   title: 'Parent-protein conditioning',
-  eq: 'β<sub>M|P</sub> = β<sub>M</sub> − κβ<sub>P</sub>, κ = ρ σ<sub>M</sub>/σ<sub>P</sub>',
+  eq: '<span data-term="bMP">β<sub>M|P</sub></span> = <span data-term="bM">β<sub>M</sub></span> − <span data-term="kappa">κ</span><span data-term="bP">β<sub>P</sub></span>, <span data-term="kappa">κ = ρ σ<sub>M</sub>/σ<sub>P</sub></span>',
+  terms: {
+    bMP: ['Conditional modification slope', 'The BMI association of a modification at a fixed amount of its parent protein. This is the conditional call in the PTM screen.'],
+    bM: ['Marginal modification slope', 'The BMI slope of the modification on its own, ignoring what the parent protein does.'],
+    bP: ['Parent-protein slope', 'The BMI slope of the protein that carries the modification.'],
+    kappa: ['Coupling κ', 'How much of the protein slope is carried into the modification: the residual correlation ρ times the ratio of the two scales. With Student-t errors the conditional slope has ν + 1 degrees of freedom.']
+  },
   ref: 'Equations 9–10',
   blurb: 'The BMI association of a modification at fixed parent protein is not the modification slope minus the protein slope. κ reweights the protein slope by the residual correlation and the ratio of the two Student-t scales. The presets are the paper’s own calibration scenarios.',
   note: 'Estimand: expected within-plex change in standardized modification per 5 kg/m² at a fixed standardized parent protein. Not occupancy, not a concentration ratio, not a causal direct effect. κ is recomputed within each joint posterior draw, preserving the dependence among the two slopes, their scales and their correlation. The scale matrix is not the covariance matrix, but the common ν/(ν−2) multiplier cancels in the ratio. The conditional distribution is Student-t with ν + 1 degrees of freedom: its mean is linear in p, so βₘ|ₚ is constant, while its scale is multiplied by √((ν + dₚ²)/(ν + 1)) — the flare in the shaded band. Of 367 eligible phosphofeatures and 1,281 glycofeatures, 14 and 67 became conditional candidates.',
@@ -302,7 +308,12 @@ const pooling = {
 const studentT = {
   id: 'student-t',
   title: 'Why a Student-t likelihood',
-  eq: 'w(r) = (ν + 1) / (ν + r<sup>2</sup>)',
+  eq: '<span data-term="w">w(r)</span> = (<span data-term="nu">ν</span> + 1) / (<span data-term="nu">ν</span> + <span data-term="r">r<sup>2</sup></span>)',
+  terms: {
+    w: ['Weight', 'How much a residual counts in the fit. A Gaussian likelihood gives every residual a weight of one.'],
+    nu: ['Degrees of freedom ν', 'Tail heaviness. Low ν downweights large residuals strongly; as ν grows the curve flattens to the Gaussian. The model gives ν − 2 an Exponential(0.10) prior.'],
+    r: ['Standardized residual', 'How far a patient sits from the fitted value, in units of the residual scale.']
+  },
   ref: 'Likelihood, all three models',
   blurb: 'A Gaussian likelihood gives every residual the same weight, so one aberrant patient moves the slope. The Student-t downweights large residuals automatically. The weight a residual receives is the curve below; ν controls how fast it falls away.',
   note: 'All three models use a Student-t likelihood with ν − 2 given an Exponential(0.10) prior, estimated per cell type in the coarse immune model and shared in the fine immune and nonimmune models. As ν grows the weight curve flattens towards the Gaussian, where every residual counts equally.',
@@ -377,7 +388,13 @@ const studentT = {
 const plex = {
   id: 'plex',
   title: 'Within-plex and between-plex BMI',
-  eq: 'y<sub>ip</sub> = α<sub>p</sub> + β<sup>within</sup>(x<sub>ip</sub> − x̄<sub>p</sub>) + β<sup>between</sup>x̄<sub>p</sub>',
+  eq: '<span data-term="y">y<sub>ip</sub></span> = <span data-term="alpha">α<sub>p</sub></span> + <span data-term="within">β<sup>within</sup>(x<sub>ip</sub> − x̄<sub>p</sub>)</span> + <span data-term="between">β<sup>between</sup>x̄<sub>p</sub></span>',
+  terms: {
+    y: ['Score', 'The measured value for patient i in plex p.'],
+    alpha: ['Plex intercept', 'The baseline level of one measurement plex (batch).'],
+    within: ['Within-plex slope', 'BMI association using only differences between patients measured in the same plex, so plex-level batch effects cancel.'],
+    between: ['Between-plex slope', 'Association with the plex-average BMI. It mixes the BMI signal with plex-to-plex batch differences, so it is read with more caution.']
+  },
   ref: 'Equation 7',
   blurb: 'Patient BMI is split into the deviation from the plex mean and the plex mean itself. The reported coefficient is the within-plex slope, so a difference in average BMI between TMT plexes cannot leak into it. Pull the plexes apart and watch the pooled line tilt while the within-plex lines do not.',
   note: 'The RNA plex variable groups patients by their proteomics plex; it does not assert an RNA batch effect. Plex intercepts are non-centered with HalfNormal(0.3) scales. The same decomposition carries into the protein–PTM models.',
@@ -461,7 +478,14 @@ const plex = {
 const heatmap = {
   id: 'heatmap',
   title: 'Shrinkage across the signature catalog',
-  eq: 'β̂<sub>j</sub> = (β<sub>j</sub>/σ<sub>j</sub><sup>2</sup> + μ<sub>c</sub>/τ<sup>2</sup>) / (1/σ<sub>j</sub><sup>2</sup> + 1/τ<sup>2</sup>)',
+  eq: '<span data-term="bhat">β̂<sub>j</sub></span> = (<span data-term="b">β<sub>j</sub></span>/<span data-term="s2">σ<sub>j</sub><sup>2</sup></span> + <span data-term="mu">μ<sub>c</sub></span>/<span data-term="tau">τ<sup>2</sup></span>) / (1/<span data-term="s2">σ<sub>j</sub><sup>2</sup></span> + 1/<span data-term="tau">τ<sup>2</sup></span>)',
+  terms: {
+    bhat: ['Shrunk slope', 'The posterior mean after pooling: a precision-weighted average of the signature’s own estimate and its cell-type mean.'],
+    b: ['Own estimate', 'What the data alone say about this signature.'],
+    s2: ['Own variance', 'The squared standard error of the signature’s own estimate. A noisy signature has a large σ² and is pulled in further.'],
+    mu: ['Cell-type mean', 'The average slope of the cell type that the signature is pulled towards.'],
+    tau: ['Spread between signatures', 'How far slopes in one cell type may differ. Small τ means strong pooling.']
+  },
   ref: 'Equation 4',
   blurb: 'The same pooling, seen across every cell type at once. Lower τ and the grid cools towards each cell type’s own mean; raise it and each signature keeps its own estimate. Cells outlined in white are those whose 95% HDI excludes zero.',
   note: 'A cell-type mean summarises the catalog signatures for that cell type. It measures neither the abundance of those cells nor their total activation. Values shown are illustrative; wire the grid to atlas_web_rows to display real posterior means.',
@@ -706,6 +730,55 @@ const cellular = {
   }
 };
 
+
+/* ---------- widget: the cellular model, orthogonal patient-effect version ---------- */
+const orthCellular = {
+  ...cellular,
+  id: 'orth-cellular',
+  title: 'The cellular RNA model (orthogonal patient effect)',
+  eq: '<span data-term="Y">Y<sub>ij</sub></span> ~ <span data-term="t">t<sub>ν</sub></span>(<span data-term="mu">μ<sub>ij</sub></span>, <span data-term="sigma">σ<sub>j</sub></span>), <span data-term="mu">μ<sub>ij</sub></span> = <span data-term="alpha">α<sub>j</sub></span> + <span data-term="beta">β<sub>j</sub>BMI<sub>i</sub></span> + <span data-term="gamma">γ<sub>j</sub>age<sub>i</sub> + δ<sub>j</sub>sex<sub>i</sub></span> + <span data-term="u">u<sub>i</sub></span>, <span data-term="orth">Xᵀu = 0</span>',
+  terms: {
+    Y: cellular.terms.Y,
+    t: ['Student-t likelihood', 'Scores scatter around their fitted value with heavier tails than a normal curve. This part is the same in both models.'],
+    mu: ['Fitted score', 'What the model expects patient i to score on signature j, given BMI, age, sex and the single patient effect u<sub>i</sub>.'],
+    sigma: cellular.terms.sigma,
+    alpha: cellular.terms.alpha,
+    beta: cellular.terms.beta,
+    gamma: cellular.terms.gamma,
+    u: ['One patient effect for all features', 'Each patient gets a single shift u<sub>i</sub>, shared by every signature in every cell type, with scale σ<sub>u</sub>. The Student-t intercept model gives each patient one shift per cell type instead.'],
+    orth: ['Orthogonality constraint', 'The vector u is forced to be uncorrelated with BMI, age and sex (the design X), by building it on the SVD null space of X. It can only absorb variation the covariates do not explain.']
+  },
+  ref: 'Comparison model, Equations 2–3 of the earlier version',
+  blurb: 'The same signature score, written for the orthogonal patient-effect model. There is one patient shift u for every feature, held orthogonal to the covariates, so it cannot soak up anything BMI explains. This is the model kept for comparison: its intervals for cell-type means were too narrow in simulation. Move the highlighted patient to see their score split into the same parts.',
+  note: 'The continuous design has rank four, leaving 123 basis coefficients for 127 patients; u = σᵤBη with the scaling set so the average prior variance is σᵤ². Likelihood, covariates and BMI pooling are the same as in the Student-t intercept model. Orthogonality is exact in the full cohort and approximate among the patients kept for one cell type. The patients here are generated; patient-level data is controlled access.',
+  params: [
+    cellular.params[0], cellular.params[1], cellular.params[2],
+    { k: 'su', label: 'σ<sub>u</sub> patient effect SD', min: 0, max: 1, step: 0.01, value: 0.5, colour: TEAL, hint: 'Scale of the single orthogonal patient effect. Prior HalfNormal(0.5).' },
+    cellular.params[4], cellular.params[5]
+  ],
+  presets: [
+    { label: 'Reference', v: { beta: 0.30, gamma: 0.12, delta: -0.08, su: 0.5, sigma: 0.65 } },
+    { label: 'Null', v: { beta: 0, gamma: 0.12, delta: -0.08, su: 0.5, sigma: 0.65 } },
+    { label: 'Noise dominates', v: { beta: 0.30, gamma: 0.12, delta: -0.08, su: 0.5, sigma: 1.3 } },
+    { label: 'Large patient effect', v: { beta: 0.30, gamma: 0.12, delta: -0.08, su: 1.0, sigma: 0.45 } }
+  ],
+  init() {
+    const c = cohort([52, 57, 18], 0.2, 20260926);
+    const r = lcg(424242);
+    let raw = Array.from({ length: c.n }, () => r.n());
+    const X = c.z.map((z, i) => [1, z, c.age[i], c.sex[i]]);
+    const b = lstsq(X, raw);
+    raw = raw.map((q, i) => q - X[i].reduce((a, xv, j) => a + xv * b[j], 0));
+    const sd = Math.sqrt(raw.reduce((a, q) => a + q * q, 0) / raw.length);
+    return { c, u: raw.map(q => q / sd), e: Array.from({ length: c.n }, () => r.n()) };
+  },
+  draw(svg, v, mem) {
+    const out = cellular.draw(svg, v, mem);
+    out.cards[2] = ['u<sub>i</sub> patient effect', out.cards[2][1], 'one shift for every feature'];
+    return out;
+  }
+};
+
 /* ---------- widget: the patient x cell-type intercept and interval coverage ---------- */
 // Normal CDF via the Abramowitz-Stegun erf approximation (error < 1.5e-7).
 function Phi(x) {
@@ -848,11 +921,132 @@ const patient = {
   }
 };
 
+
+/* ---------- widget: side-by-side model comparison ---------- */
+const NICE = [0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.2, 1.6];
+function cmpStats(v) {
+  const K = Math.round(v.K), n = Math.round(v.n);
+  const seT = Math.sqrt((v.om ** 2 + v.sg ** 2 / K) / n);
+  const seO = Math.sqrt(((v.om ** 2 + v.sg ** 2) / K) / n);
+  return { K, n, seT, seO, ratio: seO / seT, keff: (v.om ** 2 + v.sg ** 2) / (v.om ** 2 + v.sg ** 2 / K) };
+}
+function cmpPanel(svg, v, mem, model) {
+  const st = cmpStats(v), isT = model === 'T';
+  const se = isT ? st.seT : st.seO, hw = 1.959964 * se;
+  const col = isT ? TEAL : MAGENTA;
+  svg.replaceChildren();
+  if (v.view < 0.5) {
+    svg.setAttribute('viewBox', '0 0 360 286');
+    const N = 40, L = 52, R = 348, T = 16, B = 244, row = (B - T) / N;
+    const lim = NICE.find(q => q >= Math.abs(v.beta) + 3.3 * st.seT) || 1.6;
+    const X = b => L + ((clamp(b, -lim, lim) + lim) / (2 * lim)) * (R - L);
+    const z = mem.z[Math.round(v.seed) - 1];
+    let cover = 0, called = 0, wsum = 0;
+    for (const g of [-lim, -lim / 2, lim / 2, lim]) svg.append(s('line', { x1: X(g), x2: X(g), y1: T, y2: B, stroke: LINE, 'stroke-dasharray': '3 3' }));
+    svg.append(s('line', { x1: X(0), x2: X(0), y1: T, y2: B, stroke: GREY, 'stroke-width': 1.2 }));
+    for (let r = 0; r < N; r++) {
+      const est = v.beta + st.seT * z[r], y = T + (r + 0.5) * row;
+      const hit = Math.abs(est - v.beta) <= hw, excl = Math.abs(est) > hw;
+      if (hit) cover++; if (excl) called++;
+      wsum += hw;
+      const c = hit ? col : INK;
+      svg.append(s('line', { x1: X(est - hw), x2: X(est + hw), y1: y, y2: y, stroke: hit ? col : '#D81B60', 'stroke-width': 1.6, opacity: hit ? 0.55 : 0.95 }));
+      svg.append(s('circle', { cx: X(est), cy: y, r: 1.9, fill: hit ? col : '#D81B60' }));
+    }
+    svg.append(s('line', { x1: X(v.beta), x2: X(v.beta), y1: T - 4, y2: B, stroke: INK, 'stroke-width': 1.8, 'stroke-dasharray': '6 3' }));
+    const tl = s('text', { x: X(v.beta), y: T - 6, 'text-anchor': 'middle', fill: INK, 'font-size': 10.5, 'font-weight': 700 }); tl.textContent = 'true ' + minus(v.beta); svg.append(tl);
+    axes(svg, L, R, T, B, 'estimated slope per BMI SD', '40 repeated cohorts');
+    for (const g of [-lim, 0, lim]) { const q = s('text', { x: X(g), y: B + 14, 'text-anchor': 'middle', fill: GREY, 'font-size': 10.5 }); q.textContent = minus(+g.toFixed(2)); svg.append(q); }
+    return { cover, called, hw, N };
+  }
+  svg.setAttribute('viewBox', '0 0 360 286');
+  const L = 52, R = 348, T = 16, B = 244;
+  const wAt = (om, which) => 1.959964 * Math.sqrt(which === 'T' ? (om ** 2 + v.sg ** 2 / st.K) / st.n : ((om ** 2 + v.sg ** 2) / st.K) / st.n);
+  const ymax = wAt(1, 'T') * 1.08, X = om => L + om * (R - L), Y = w => B - (w / ymax) * (B - T);
+  for (const g of [0.25, 0.5, 0.75, 1]) svg.append(s('line', { x1: L, x2: R, y1: Y(wAt(g, 'T')), y2: Y(wAt(g, 'T')), stroke: LINE, 'stroke-dasharray': '3 3', opacity: 0 }));
+  const curve = which => { let d = ''; for (let i = 0; i <= 40; i++) { const om = i / 40; d += (i ? 'L' : 'M') + X(om).toFixed(1) + ' ' + Y(wAt(om, which)).toFixed(1); } return d; };
+  if (!isT) svg.append(s('path', { d: curve('T'), fill: 'none', stroke: TEAL, 'stroke-width': 1.6, 'stroke-dasharray': '5 4', opacity: 0.7 }));
+  svg.append(s('path', { d: curve(model), fill: 'none', stroke: col, 'stroke-width': 2.6 }));
+  svg.append(s('circle', { cx: X(v.om), cy: Y(hw), r: 5.5, fill: col, stroke: '#fff', 'stroke-width': 1.6 }));
+  axes(svg, L, R, T, B, 'ω shared shift SD', 'interval half-width');
+  for (const g of [0, 0.5, 1]) { const q = s('text', { x: X(g), y: B + 14, 'text-anchor': 'middle', fill: GREY, 'font-size': 10.5 }); q.textContent = g.toFixed(1); svg.append(q); }
+  for (const g of [0, 0.5, 1]) { const w = ymax * g * 0.9; const q = s('text', { x: L - 5, y: Y(w) + 4, 'text-anchor': 'end', fill: GREY, 'font-size': 10 }); q.textContent = w.toFixed(2); svg.append(q); }
+  if (!isT) { const q = s('text', { x: R - 4, y: Y(wAt(1, 'T')) - 6, 'text-anchor': 'end', fill: TEAL, 'font-size': 10.5 }); q.textContent = 'Student-t intercept'; svg.append(q); }
+  return { cover: null, called: null, hw, N: 0 };
+}
+const compare = {
+  id: 'compare',
+  compare: true,
+  title: 'Model comparison: Student-t intercept vs orthogonal patient effect',
+  ref: 'Comparison of the two cellular models',
+  blurb: 'Both models see the same simulated cohorts. The only difference is how each treats the shift that all signatures of one cell type share within a patient. The Student-t intercept model has a term for it. The orthogonal model has one patient effect for all features, so it treats the signatures as more independent than they are and draws intervals that are too narrow. Change any slider and both graphs move together.',
+  note: 'Exact arithmetic for the cell-type mean of K signatures: the correct variance per patient is ω² + σ²/K, and a model that ignores the shared shift uses (ω² + σ²)/K. Both panels reuse the same 40 draws of the sampling error, so the estimates are identical and only the intervals differ. This isolates one mechanism and does not reproduce the full simulation, where the orthogonal model covered the true effects 50 to 66% of the time and the Student-t intercept model stayed near nominal.',
+  models: [
+    { key: 'T', title: 'Student-t intercept model', tag: 'primary', terms: 'T',
+      eq: '<span data-term="mu">μ<sub>ij</sub></span> = α<sub>j</sub> + β<sub>j</sub>BMI<sub>i</sub> + … + <span data-term="v">v<sub>i,c(j)</sub></span>' },
+    { key: 'O', title: 'Orthogonal patient-effect model', tag: 'comparison', terms: 'O',
+      eq: '<span data-term="mu">μ<sub>ij</sub></span> = α<sub>j</sub> + β<sub>j</sub>BMI<sub>i</sub> + … + <span data-term="u">u<sub>i</sub></span>, <span data-term="orth">Xᵀu = 0</span>' }
+  ],
+  terms: {
+    T: {
+      mu: ['Fitted score', 'The expected score of signature j in patient i, from BMI, age, sex and the patient shift.'],
+      v: ['Patient × cell-type intercept', 'One shift per patient for each cell type, shared by every signature of that cell type. It takes the shared variation ω² out of the signature noise, so a cell-type mean gets an interval of the right width.']
+    },
+    O: {
+      mu: ['Fitted score', 'The expected score of signature j in patient i, from BMI, age, sex and the single patient effect.'],
+      u: ['One patient effect for all features', 'A single shift per patient for every signature in every cell type. It has no way to represent a shift that belongs to one cell type, so signatures of that cell type look more independent than they are.'],
+      orth: ['Orthogonality constraint', 'u is held uncorrelated with BMI, age and sex, so it can only absorb what the covariates do not explain.']
+    }
+  },
+  params: [
+    { k: 'beta', label: 'true cell-type slope', min: -0.3, max: 0.6, step: 0.01, value: 0.10, colour: MAGENTA, hint: 'The effect the cohorts are simulated around, per BMI SD. Set to zero to count false calls.' },
+    { k: 'om', label: 'ω<sub>c</sub> shared shift SD', min: 0, max: 1, step: 0.01, value: 0.35, colour: TEAL, hint: 'Size of the shift shared by all signatures of a cell type in a patient.' },
+    { k: 'sg', label: 'σ residual SD', min: 0.2, max: 1.5, step: 0.01, value: 0.65, colour: GREY, hint: 'Independent noise of each signature.' },
+    { k: 'K', label: 'K signatures in the cell type', min: 1, max: 60, step: 1, value: 35, colour: BLUE, fmt: x => String(Math.round(x)), hint: 'More signatures help little once the shared shift dominates.' },
+    { k: 'n', label: 'patients', min: 40, max: 300, step: 1, value: 127, colour: BLUE, fmt: x => String(Math.round(x)), hint: 'The study has 127.' },
+    { k: 'seed', label: 'set of repeated cohorts', min: 1, max: 20, step: 1, value: 1, colour: GREY, fmt: x => '#' + Math.round(x), hint: 'A different batch of 40 simulated cohorts.' },
+    { k: 'view', label: 'graph', min: 0, max: 1, step: 1, value: 0, colour: GREY, fmt: x => (x ? 'width vs ω' : 'repeated cohorts'), hint: 'Switch between the repeated-cohort intervals and the interval width as the shared shift grows.' }
+  ],
+  presets: [
+    { label: 'Reference', v: { beta: 0.10, om: 0.35, sg: 0.65, K: 35, n: 127, seed: 1 } },
+    { label: 'No true effect', v: { beta: 0, om: 0.35, sg: 0.65, K: 35, n: 127, seed: 1 } },
+    { label: 'No shared shift', v: { beta: 0.10, om: 0, sg: 0.65, K: 35, n: 127, seed: 1 } },
+    { label: 'Large shared shift', v: { beta: 0.10, om: 0.8, sg: 0.65, K: 35, n: 127, seed: 1 } },
+    { label: 'Few signatures', v: { beta: 0.10, om: 0.35, sg: 0.65, K: 4, n: 127, seed: 1 } },
+    { label: 'Many patients', v: { beta: 0.10, om: 0.35, sg: 0.65, K: 35, n: 300, seed: 1 } }
+  ],
+  init() {
+    const r = lcg(777001);
+    return { z: Array.from({ length: 20 }, () => Array.from({ length: 40 }, () => r.n())) };
+  },
+  panel(key, svg, v, mem) {
+    const st = cmpStats(v), out = cmpPanel(svg, v, mem, key), isT = key === 'T';
+    const exp = isT ? 0.95 : 2 * Phi(1.959964 * st.ratio) - 1;
+    const cards = [
+      ['interval half-width', '±' + out.hw.toFixed(3), isT ? 'correct for the shared shift' : (st.ratio * 100).toFixed(0) + '% of the correct width', true],
+      ['expected coverage', (exp * 100).toFixed(0) + '%', 'of a nominal 95% interval']
+    ];
+    if (out.cover !== null) cards.push([v.beta === 0 ? 'false calls in 40' : 'intervals missing the truth', String(v.beta === 0 ? out.called : out.N - out.cover), v.beta === 0 ? 'interval excludes zero' : 'of 40 repeated cohorts']);
+    else cards.push(['K<sub>eff</sub>', st.keff.toFixed(1), 'of ' + st.K + ' signatures']);
+    return { live: isT ? `K = ${st.K} signatures worth <b>${st.keff.toFixed(1)}</b> independent ones · half-width <b>±${out.hw.toFixed(3)}</b>` : `treats them as nearly independent · half-width <b>±${out.hw.toFixed(3)}</b>`, cards };
+  },
+  verdict(v) {
+    const st = cmpStats(v), exp = 2 * Phi(1.959964 * st.ratio) - 1;
+    return st.ratio < 0.92
+      ? ['Same data, different intervals', `With a shared shift of ${v.om.toFixed(2)} across ${st.K} signatures the orthogonal model draws intervals ${(st.ratio * 100).toFixed(0)}% as wide as the Student-t intercept model, so a nominal 95% interval covers the truth about ${(exp * 100).toFixed(0)}% of the time. The estimates are identical; the difference is how much uncertainty each model admits to.`]
+      : ['The two models agree here', 'With little shared shift, or very few signatures, treating signatures as independent costs almost nothing, so the two sets of intervals are nearly the same width. Raise ω or K to separate them.'];
+  }
+};
+
 /* ---------- widget: protein minus RNA, Equation 8 ---------- */
 const contrast = {
   id: 'contrast',
   title: 'Slope difference versus co-variation',
-  eq: 'Δ = β<sub>protein</sub> − β<sub>RNA</sub> (within-plex, from joint draws) · ρ = residual correlation',
+  eq: '<span data-term="delta">Δ = β<sub>protein</sub> − β<sub>RNA</sub></span> (within-plex, from joint draws) · <span data-term="rho">ρ = residual correlation</span>',
+  terms: {
+    delta: ['Slope difference', 'Protein slope minus RNA slope, taken draw by draw from the joint posterior so that the correlation between the two slopes is respected.'],
+    rho: ['Residual correlation', 'How much the protein and RNA scores of one gene move together between patients beyond BMI. Strong co-variation can sit alongside no slope difference, and the reverse.']
+  },
   ref: 'Equation 8, Figure 5',
   blurb: 'Two gene lists can track each other tightly across patients and still respond differently to BMI. Δ and ρ are separate quantities measuring separate things, and the ECM programme is the case where they disagree. Grey connectors join each patient’s RNA and protein score: short connectors mean high ρ.',
   note: 'The contrast compares layer-specific score SDs per 5 kg/m², not concentrations. It is formed within each retained joint posterior draw and summarised afterwards, so its interval carries the dependence between the two slopes. ρ is the residual correlation after covariates and plex, which is a different question from whether the two BMI slopes agree. 122 distinct measured gene lists were fitted, each on its own, with no hierarchy across programmes.',
@@ -938,7 +1132,12 @@ const ERRORS = ['student_t', 'normal', 'contaminated', 'heteroskedastic'];
 const simulation = {
   id: 'simulation',
   title: 'The simulation and its target',
-  eq: 'B* = (XᵀX)⁻¹XᵀH — the projection of the generating mean onto the fitted design',
+  eq: '<span data-term="B">B*</span> = (<span data-term="X">XᵀX</span>)⁻¹<span data-term="X">Xᵀ</span><span data-term="H">H</span> — the projection of the generating mean onto the fitted design',
+  terms: {
+    B: ['Target slope', 'What a fitted design is actually aiming at when the truth is not linear. Coverage is judged against this, not against the raw amplitude.'],
+    X: ['Fitted design', 'Continuous BMI or the three WHO groups, plus age and sex.'],
+    H: ['Generating mean', 'The true curve used to simulate the data: linear, threshold, plateau and so on.']
+  },
   ref: 'Simulation design, Figure 2',
   blurb: 'Every scenario in the notebook, and the question they were built to answer: what is a fit even aiming at when the truth is not linear? The grey curve is the generating mean H. The two coloured fits are its least-squares projections onto the continuous and categorical designs. Those projections, not the raw amplitude, are what coverage is measured against.',
   note: 'Reproduces the notebook’s generating model: BMI from three clipped Gaussians, age confounded with BMI, logistic sex, a random quarter of features active with lognormal magnitudes and a shared sign per cell type, residual scales centred at 0.65, and Student-t errors with a shared within-cell component. Projecting a threshold or plateau onto a linear BMI term gives a nonzero but attenuated slope, so a continuous fit can hold nominal coverage for its own target while detecting step changes less often than the categorical contrasts. This draws one dataset; the paper averages 10 replicates across 20 condition-size combinations, 400 model assessments in all.',
@@ -1111,7 +1310,11 @@ const DATASRC = 'Published posterior summaries from the Atlas database.';
 const funnel = {
   id: 'screen',
   title: 'What the screen returned',
-  eq: 'marginal call → conditional call',
+  eq: '<span data-term="marg">marginal call</span> → <span data-term="cond">conditional call</span>',
+  terms: {
+    marg: ['Marginal call', 'Negative, uncertain or positive from the modification alone, ignoring its parent protein, by whether the 95% HDI excludes zero.'],
+    cond: ['Conditional call', 'The same call after conditioning on the parent protein. Features can change class between the two.']
+  },
   ref: 'PTM screen, Figure 6',
   blurb: 'The screen set out to find modified forms associated with BMI. Conditioning on parent protein then rebuilt the candidate list almost from scratch. These are the published counts: how many features entered, how many survived each gate, and how the marginal and conditional calls disagree.',
   note: 'A feature qualified with finite protein and PTM values for at least 102 patients across at least 16 plexes, nonzero variance in both responses and an available parent protein. Candidates require a numerically adequate primary fit and a conditional 95% HDI excluding zero. No hierarchy pools features within genes, signatures or pathways, and there is no multiplicity control across the screen. ' + DATASRC,
@@ -1214,7 +1417,11 @@ const funnel = {
 const widening = {
   id: 'widening',
   title: 'Which associations survive widening',
-  eq: 'factor = z<sub>0.975</sub> / z<sub>(1+c)/2</sub>, survives if |β| > factor × (distance to the zero-side bound)',
+  eq: '<span data-term="factor">factor = z<sub>0.975</sub> / z<sub>(1+c)/2</sub></span>, <span data-term="surv">survives if |β| > factor × (distance to the zero-side bound)</span>',
+  terms: {
+    factor: ['Widening factor', 'How far each interval is stretched so that its coverage matches 95%: 1.960 divided by the normal quantile for the achieved coverage c.'],
+    surv: ['Survival rule', 'An association survives if its interval, once widened, still excludes zero. Intervals are asymmetric, so the distance is measured from the posterior mean to the bound on the side of zero.']
+  },
   ref: 'Decision rule, simulation coverage',
   blurb: 'Simulated residual correlation among signatures pushed coverage of the nominal 95% intervals down to about 84.6%, so named associations were re-checked after widening each interval by 1.37. This applies that correction to every published cellular slope and shows exactly which ones hold.',
   note: 'Signatures within a cell type share genes, so their residuals are correlated and the intervals are narrower than their nominal level. The widening is an approximate, illustrative correction, not a re-fit. Applied across all three compartments. ' + DATASRC,
@@ -1293,7 +1500,11 @@ const widening = {
 const support = {
   id: 'support',
   title: 'Measurement support and what it costs',
-  eq: 'profiles with fewer than 1,000 allocated reads were dropped',
+  eq: 'profiles with fewer than <span data-term="cut">1,000</span> <span data-term="reads">allocated reads</span> were dropped',
+  terms: {
+    reads: ['Allocated reads', 'Sequencing reads assigned to one cell type by deconvolution in one patient.'],
+    cut: ['Read cutoff', 'The minimum for a patient × cell-type profile to enter the fit in the earlier fits. The sensitivity analysis shows what changes without it.']
+  },
   ref: 'Read-depth sensitivity, component eligibility',
   blurb: 'Deconvolution assigns each bulk sample’s reads across cell types. For some types almost nothing is assigned in some patients, and a score built on 19 reads is noise. Each point is one component: the horizontal axis is its median allocated reads, the bar runs down to the worst patient it had.',
   note: 'The exclusion rule does not use BMI, but it changes which patients represent each cell type, so estimates and interval widths were compared before and after. Those before-and-after estimates are not published in the Atlas; what is published, and shown here, are the support metrics that drove the gate. strict_qc_clear passes the strict gate; borderline_supported fails it but is retained by the tiered gate used for the primary analysis; exploratory_zero_heavy fails both. ' + DATASRC,
@@ -1383,17 +1594,128 @@ const PROVENANCE = {
   'simulation':    ['mixed', 'Published metrics, simulated draw', 'The dataset is generated live from the notebook\u2019s model; the RMSE and coverage bars are published.'],
   'student-t':     ['exact', 'Exact formula', 'The weight curve is the likelihood itself, not a data summary.'],
   'intercept':     ['exact', 'Exact formula', 'Coverage is computed from the variance of a cell-type mean; no patient data are used.'],
+  'orth-cellular': ['illustrative', 'Simulated cohort', 'Comparison model. Patient-level data is controlled access, so the 127 patients here are generated; orthogonality of u is exact arithmetic on them.'],
+  'compare':       ['exact', 'Exact formula, simulated draws', 'Interval widths are closed-form. The 40 repeated cohorts are seeded draws of the sampling error, identical in both panels.'],
   'cellular':      ['illustrative', 'Simulated cohort', 'Patient-level data is controlled access, so the 127 patients here are generated from the study\u2019s cohort structure.'],
   'patient-effect':['illustrative', 'Simulated cohort', 'Comparison model. Patient-level data is controlled access; the orthogonality shown is exact arithmetic on generated patients.'],
   'plex':          ['illustrative', 'Simulated cohort', 'Patient-level data is controlled access, so plex membership and scores here are generated.'],
   'heatmap':       ['illustrative', 'Illustrative grid', 'The published cell-type by signature grid is too sparse to fill; shrinkage shown is the exact conjugate result.']
 };
 
-export const EXPLAINERS = [cellular, intercept, pooling, heatmap, support, patient, plex, contrast, conditioning, funnel, widening, studentT, simulation];
+export const EXPLAINERS = [cellular, orthCellular, compare, intercept, pooling, heatmap, support, patient, plex, contrast, conditioning, funnel, widening, studentT, simulation];
 
 /* ---------- mount ---------- */
+function mountCompare(root, spec) {
+  const v = {};
+  for (const p of spec.params) v[p.k] = p.value;
+  const mem = spec.init();
+  root.replaceChildren();
+  const head = h('div', undefined, { class: 'xp-head' });
+  head.append(h('p', spec.ref, { class: 'xp-ref' }), h('p', spec.blurb, { class: 'xp-blurb' }));
+  root.append(head);
+
+  const bar = h('div', undefined, { class: 'xp-cmp-controls' });
+  const inputs = {};
+  for (const p of spec.params) {
+    const wrap = h('div', undefined, { class: 'xp-ctrl' });
+    const lab = h('label', undefined, { for: 'xp-cmp-' + p.k }); lab.innerHTML = p.label;
+    const val = h('span', undefined, { class: 'xp-val' }); val.style.color = p.colour;
+    const inp = h('input', undefined, { type: 'range', id: 'xp-cmp-' + p.k, min: p.min, max: p.max, step: p.step, value: p.value });
+    inp.style.accentColor = p.colour;
+    const row = h('div', undefined, { class: 'xp-ctrl-row' }); row.append(lab, val);
+    wrap.append(row, inp, h('span', p.hint, { class: 'xp-hint' }));
+    bar.append(wrap);
+    inputs[p.k] = { inp, val, p };
+    inp.addEventListener('input', () => { v[p.k] = parseFloat(inp.value); update(); });
+  }
+  const apply = vals => {
+    for (const p of spec.params) { const nv = vals[p.k] !== undefined ? vals[p.k] : p.value; if (p.k === 'view' && vals.view === undefined) continue; v[p.k] = nv; inputs[p.k].inp.value = nv; }
+    update();
+  };
+  const pr = h('div', undefined, { class: 'xp-presets' });
+  pr.append(h('span', 'Scenarios', { class: 'xp-presets-label' }));
+  for (const preset of spec.presets) { const b = h('button', preset.label, { type: 'button', class: 'xp-pre' }); b.addEventListener('click', () => apply(preset.v)); pr.append(b); }
+  const reset = h('button', 'Reset values', { type: 'button', class: 'text-button xp-reset' });
+  reset.addEventListener('click', () => { v.view = 0; inputs.view.inp.value = 0; apply({}); });
+  const ctl = h('div', undefined, { class: 'xp-cmp-bar' });
+  ctl.append(bar, pr, reset);
+  root.append(ctl);
+
+  const grid = h('div', undefined, { class: 'xp-cmp-grid' });
+  const panels = spec.models.map(m => {
+    const box = h('section', undefined, { class: 'xp-cmp-panel xp-cmp-' + m.key });
+    const top = h('div', undefined, { class: 'xp-cmp-top' });
+    const t = h('h3', undefined); t.append(m.title + ' ', h('small', m.tag, { class: 'xp-cmp-tag' }));
+    const eq = h('p', undefined, { class: 'xp-cmp-eq' }); eq.innerHTML = m.eq;
+    top.append(t, eq);
+    bindTerms(top, spec.terms[m.terms], [eq]);
+    const live = h('p', undefined, { class: 'xp-live' });
+    const svg = s('svg', { role: 'img', 'aria-label': m.title + ' diagram' });
+    const cards = h('div', undefined, { class: 'xp-cards' });
+    box.append(top, live, svg, cards); grid.append(box);
+    return { key: m.key, live, svg, cards };
+  });
+  const pv = PROVENANCE[spec.id];
+  if (pv) { const tag = h('div', undefined, { class: 'xp-prov xp-prov-' + pv[0] }); tag.append(h('strong', pv[1]), h('span', pv[2])); root.append(tag); }
+  const verdict = h('div', undefined, { class: 'xp-verdict' });
+  root.append(grid, verdict, h('p', spec.note, { class: 'xp-note' }));
+
+  function update() {
+    for (const p of spec.params) inputs[p.k].val.textContent = p.fmt ? p.fmt(v[p.k]) : minus(v[p.k]);
+    for (const pn of panels) {
+      const out = spec.panel(pn.key, pn.svg, v, mem);
+      pn.live.innerHTML = out.live;
+      pn.cards.replaceChildren();
+      for (const [label, big, sub, lead] of out.cards) {
+        const c = h('div', undefined, { class: 'xp-card' + (lead ? ' lead' : '') });
+        const hh = h('h4'); hh.innerHTML = label;
+        c.append(hh, h('strong', big), h('span', sub)); pn.cards.append(c);
+      }
+    }
+    const vd = spec.verdict(v);
+    verdict.replaceChildren(h('strong', vd[0] + '. '), h('span', vd[1]));
+  }
+  update();
+  return update;
+}
+
+/* Each marked part of an equation opens a speech bubble explaining it. */
+function bindTerms(head, terms, eqEls) {
+  const bubble = h('div', undefined, { class: 'xp-bubble', role: 'dialog', 'aria-live': 'polite' });
+  bubble.hidden = true;
+  let open = null;
+  const close = () => { bubble.hidden = true; if (open) open.setAttribute('aria-expanded', 'false'); open = null; };
+  const show = term => {
+    const [title, text] = terms[term.dataset.term] || [];
+    if (!title) return;
+    if (open === term) { close(); return; }
+    close();
+    bubble.replaceChildren(h('strong', title));
+    const body = h('span'); body.innerHTML = text; bubble.append(body);
+    bubble.hidden = false; open = term; term.setAttribute('aria-expanded', 'true');
+    const hr = head.getBoundingClientRect(), tr = term.getBoundingClientRect();
+    const left = Math.max(0, Math.min(tr.left - hr.left + tr.width / 2 - 150, hr.width - 300));
+    bubble.style.left = left + 'px';
+    bubble.style.top = (tr.bottom - hr.top + 10) + 'px';
+    bubble.style.setProperty('--tail', Math.max(14, Math.min(286, tr.left - hr.left + tr.width / 2 - left)) + 'px');
+  };
+  for (const el of eqEls) for (const term of el.querySelectorAll('[data-term]')) {
+    term.classList.add('xp-term');
+    term.setAttribute('tabindex', '0');
+    term.setAttribute('role', 'button');
+    term.setAttribute('aria-expanded', 'false');
+    term.title = 'Click for an explanation';
+    term.addEventListener('click', e => { e.stopPropagation(); show(term); });
+    term.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(term); } });
+  }
+  document.addEventListener('click', e => { if (open && !bubble.contains(e.target)) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  head.append(bubble, h('p', 'Click any underlined part of the equation for an explanation.', { class: 'xp-termhint' }));
+}
+
 export function mountExplainer(root, id) {
   const spec = EXPLAINERS.find(e => e.id === id) || EXPLAINERS[0];
+  if (spec.compare) return mountCompare(root, spec);
   const v = {};
   for (const p of spec.params) v[p.k] = p.value;
   const mem = spec.init();
@@ -1404,39 +1726,7 @@ export function mountExplainer(root, id) {
   const eqMain = h('p', undefined, { class: 'xp-eqmain' });
   eqMain.innerHTML = spec.eq;
   head.append(eqMain);
-  if (spec.terms) {
-    // Each part of the equation opens a speech bubble explaining it.
-    const bubble = h('div', undefined, { class: 'xp-bubble', role: 'dialog', 'aria-live': 'polite' });
-    bubble.hidden = true;
-    let open = null;
-    const close = () => { bubble.hidden = true; if (open) open.setAttribute('aria-expanded', 'false'); open = null; };
-    const show = term => {
-      const [title, text] = spec.terms[term.dataset.term] || [];
-      if (!title) return;
-      if (open === term) { close(); return; }
-      close();
-      bubble.replaceChildren(h('strong', title));
-      const body = h('span'); body.innerHTML = text; bubble.append(body);
-      bubble.hidden = false; open = term; term.setAttribute('aria-expanded', 'true');
-      const hr = head.getBoundingClientRect(), tr = term.getBoundingClientRect();
-      const left = Math.max(0, Math.min(tr.left - hr.left + tr.width / 2 - 150, hr.width - 300));
-      bubble.style.left = left + 'px';
-      bubble.style.top = (tr.bottom - hr.top + 10) + 'px';
-      bubble.style.setProperty('--tail', Math.max(14, Math.min(286, tr.left - hr.left + tr.width / 2 - left)) + 'px');
-    };
-    for (const term of eqMain.querySelectorAll('[data-term]')) {
-      term.classList.add('xp-term');
-      term.setAttribute('tabindex', '0');
-      term.setAttribute('role', 'button');
-      term.setAttribute('aria-expanded', 'false');
-      term.title = 'Click for an explanation';
-      term.addEventListener('click', e => { e.stopPropagation(); show(term); });
-      term.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(term); } });
-    }
-    document.addEventListener('click', e => { if (open && !bubble.contains(e.target)) close(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-    head.append(bubble, h('p', 'Click any part of the equation for an explanation.', { class: 'xp-termhint' }));
-  }
+  if (spec.terms) bindTerms(head, spec.terms, [eqMain]);
   head.append(h('p', spec.blurb, { class: 'xp-blurb' }));
   root.append(head);
 
