@@ -1,5 +1,5 @@
 {
-  "revision": "2026-11-03",
+  "revision": "2026-11-22",
   "main_figures": [
     1,
     2,
@@ -33,77 +33,75 @@
     21,
     22,
     23,
-    24
+    24,
+    25,
+    26
   ],
   "reference_files": [
     {
-      "name": "Manuscript_figS_renumbered_tracked(2).docx",
-      "sha256": "eb355eb9e04873bf1fb07c667f3ca3c1cfd83092da31538eb94f91409e692ae9"
+      "name": "Manuscript_r15_tracked.docx",
+      "sha256": "97f25e3eee4ee23ebf246130f10d04affd6065cafd6e1be8a8bdffaaa409b837"
     },
     {
-      "name": "Main_Figures_A4_updated_captions(1).pptx",
-      "sha256": "5dee3c395c0297e7e218083e42bb78e1bbce593f4b9d68140caff9423ffb9619"
-    },
-    {
-      "name": "Supplementary_Figures_S1-S19.pptx",
-      "sha256": "57882dc3f5ede0916e5ad43e6d6a57b74e4f12df80c86797e664d453f6c11212"
+      "name": "supabase_r10_bundle_20261122T141636Z.zip (paper_A4_figures/r10)",
+      "sha256": "23c63099645921cecf863f397a236ebf2a9cea5ea2ea0fc5f5c404836fc6e104"
     }
   ],
   "datasets": {
     "manuscript/asah1_labels": {
-      "title": "Figure S15b · ASAH1 glycofeature identities",
+      "title": "Figure S25b · ASAH1 glycofeature identities",
       "description": "A01–A20 identify distinct peptide-plus-glycan features. All 20 conditional estimates are retained."
     },
     "manuscript/candidate_sensitivity_coverage": {
-      "title": "Figure S14b · candidate sensitivity coverage",
+      "title": "Figure S20 · candidate sensitivity coverage",
       "description": "Covariate-sensitivity availability for 27 of 81 primary conditional candidates: 24 selected features plus three ASAH1 glycoforms."
     },
     "manuscript/glyco_labels": {
-      "title": "Figure 6d · glycofeature labels",
+      "title": "Figure 6e · glycofeature labels",
       "description": "The 20 displayed glycofeatures with complete peptide and glycan identities and both effect columns."
     },
     "manuscript/phospho_labels": {
-      "title": "Figure 6c · phosphosite labels",
+      "title": "Figure 6d · phosphosite labels",
       "description": "The 14 displayed phosphosites with complete feature identities and both effect columns."
     },
     "manuscript/ptm_calibration_completion": {
-      "title": "Figure S21b · calibration sample counts",
+      "title": "Figure S19b · calibration sample counts",
       "description": "250 completed simulated datasets; 249 numerically adequate."
     },
     "manuscript/ptm_calibration_replicates": {
-      "title": "Figures S18–S20 · per-replicate calibration metrics",
+      "title": "Figures S16–S18 · per-replicate calibration metrics",
       "description": "250 simulated datasets × six quantities. Literal null denotes the null scenario; these are simulated quantities, not patient records."
     },
     "manuscript/ptm_calibration_summary": {
-      "title": "Figures S18–S20 · PTM calibration summary",
-      "description": "Six quantities, five scenarios and two scopes: all completed versus numerically adequate fits. Figure S18 shows coverage, S19 bias and S20 RMSE. Coverage bars are Wilson confidence intervals, not HDIs. No screen-wide false-discovery control."
+      "title": "Figures S16–S18 · PTM calibration summary",
+      "description": "Six quantities, five scenarios and two scopes: all completed versus numerically adequate fits. Figure S16 shows coverage, S17 bias and S18 RMSE. Coverage bars are Wilson confidence intervals, not HDIs. No screen-wide false-discovery control."
     },
     "manuscript/ptm_calibration_templates": {
-      "title": "Figures S18–S20 · calibration by template",
+      "title": "Figures S16–S18 · calibration by template",
       "description": "Separate phospho and glyco template results; aggregate summaries across simulated replicates."
     },
     "manuscript/ptm_heatmap_lookup": {
-      "title": "Figures 6c,d · PTM heatmap identities and estimates",
+      "title": "Figures 6d,e · PTM candidate identities and estimates",
       "description": "All 14 phospho and top 20 of 67 glyco conditional candidates. Gene, site/peptide/glycan, both effects and pointwise HDIs; magnitude-ranked without multiplicity control."
     },
     "manuscript/ptm_sbc_bins": {
-      "title": "Figure S21a · SBC rank histogram counts",
+      "title": "Figure S19a · SBC rank histogram counts",
       "description": "Pointwise 95% binomial reference limits are not simultaneous bands or a formal calibration test."
     },
     "manuscript/ptm_sbc_values": {
-      "title": "Figure S21a · SBC ranks",
+      "title": "Figure S19a · SBC ranks",
       "description": "Prior-predictive SBC ranks for 50 simulated datasets × six quantities. Randomized ties use seed 20261004."
     },
     "manuscript/rna_heatmap_values": {
-      "title": "Figure 3a · RNA heatmap values",
-      "description": "Displayed continuous RNA coefficients for the 24 selected signature rows. Unmodeled combinations remain missing. The named examples in Figures 3b–e are available in the compartment RNA effects collections."
+      "title": "Orthogonal patient-effect model · signature heatmap values",
+      "description": "Displayed coefficients from the orthogonal patient-effect model for the 24 signature rows shown in an earlier version of Figure 3a. Figure 3 now uses the Student-t intercept model; its estimates are in the RNA effects collections. Unmodeled combinations remain missing."
     },
     "manuscript/rna_protein_heatmap_values": {
-      "title": "Figure 5e · RNA–protein heatmap values",
+      "title": "Figure 5d · RNA–protein values for the displayed gene sets",
       "description": "Displayed paired-model RNA and protein slopes and direct protein-minus-RNA contrasts."
     },
     "manuscript/rna_protein_labels": {
-      "title": "Figure 5e · RNA–protein programme labels",
+      "title": "Figure 5d · RNA–protein programme labels",
       "description": "RP01–RP16 link displayed labels to unique measured programmes and source signatures."
     },
     "manuscript/sensitivity_classifications": {
@@ -132,39 +130,30 @@
     }
   },
   "panel_mapping": {
-    "3a": "RNA heatmap",
-    "3b–e": "Named continuous RNA examples, formerly Figure S23",
-    "6c": "All 14 conditional phospho candidates",
-    "6d": "Top 20 of 67 conditional glyco candidates",
-    "S14a": "Protein-conditioned PTM landscape",
-    "S14b": "Candidate diagnostic and sensitivity coverage",
-    "S15a": "STAT3 Y705/S727 estimates",
-    "S15b": "ASAH1 glycofeature estimates and identities",
-    "S16a": "STAT3 continuous sensitivity",
-    "S16b": "STAT3 categorical contrasts",
-    "S16c": "STAT3 and ASAH1 bootstrap benchmarks",
-    "S17a": "Cellular RNA workflow",
-    "S17b": "RNA–protein workflow",
-    "S17c": "Protein–PTM workflow",
-    "S18": "PTM interval coverage",
-    "S19": "PTM bias",
-    "S20": "PTM RMSE",
-    "S21a": "SBC ranks",
-    "S21b": "Simulation completion",
+    "1a–c": "Cellular, RNA–protein and protein–PTM workflows (formerly S17a–c)",
+    "3a–c": "Student-t intercept model: top signatures, cell-type means and TAM signatures",
+    "5d": "The 16 gene sets with the largest RNA or protein slope (formerly 5e)",
+    "6d": "All 14 conditional phospho candidates (formerly 6c)",
+    "6e": "Top 20 of 67 conditional glyco candidates (formerly 6d)",
+    "S11": "Random-gene control and TAM gene drivers",
+    "S16": "PTM interval coverage (formerly S18)",
+    "S17": "PTM bias (formerly S19)",
+    "S18": "PTM RMSE (formerly S20)",
+    "S19a": "SBC ranks (formerly S21a)",
+    "S19b": "Simulation completion (formerly S21b)",
+    "S20": "Ranked PTM candidates and candidate diagnostic coverage (formerly S14)",
     "S22a": "PTM sensitivity overview",
     "S22b": "Interval classifications",
-    "S23a": "Fixed plex versus primary",
-    "S23b": "Stage subset versus primary",
-    "S23c": "Stage adjustment versus matched subset",
-    "S23d": "Purity subset versus primary",
-    "S24a": "Purity adjustment versus matched subset",
-    "S24b": "Mutation adjustment versus primary",
-    "S24c": "Weight-loss exclusion versus primary",
-    "S24d": "Adenosquamous exclusion versus primary"
+    "S23a–d": "Fixed plex, stage subset, stage adjustment and purity subset comparisons",
+    "S24a–d": "Purity adjustment, mutation adjustment, weight-loss and adenosquamous exclusions",
+    "S25a": "STAT3 site estimates (formerly S15a)",
+    "S25b": "ASAH1 glycoform estimates and identities (formerly S15b)",
+    "S26a–c": "STAT3 sensitivity, categorical contrasts and bootstrap benchmarks (formerly S16a–c)"
   },
   "notes": [
-    "The supplementary reference deck contains 24 slides (S1–S24), despite its S1-S19 filename.",
+    "Figure numbers follow the r10 figure set (Figures 1–7, S1–S26) and manuscript r15.",
     "The frozen October source archive retains its historical figure filenames and source hashes. Current figure placement is defined here.",
-    "The two ASAH1 CSVs are separate archived sources; they are not included in the supplied figure ZIP."
+    "The two ASAH1 CSVs are separate archived sources; they are not included in the supplied figure ZIP.",
+    "Panel letters for Figure S20 are not assigned here; the candidate sensitivity coverage table supports its diagnostic panel."
   ]
 }

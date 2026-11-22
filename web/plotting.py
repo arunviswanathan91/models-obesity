@@ -332,6 +332,47 @@ def render(request_json):
             fig.axes[0].set_xlabel('Cell type' if df.cell_type.notna().any() else 'Effect component')
             fig.axes[0].set_ylabel('Signature / feature')
             note=f'{len(row_names)} rows ranked by maximum absolute posterior mean. Scale: −{vmax:.3g} (blue) to +{vmax:.3g} (magenta), white = 0; units: {units}. Circle: pointwise 95% HDI excludes zero. Empty cells are unavailable.'
+    elif kind in ('model_comparison', 'width_ratio'):
+        # Paired rows from compare_<analysis>/features or /celltypes.
+        for c in ['contrast', 'entity_level', 'units']:
+            if c in df and df[c].fillna('').nunique() > 1:
+                raise ValueError('Choose one '+c.replace('_',' ')+' before drawing. Different quantities must not be pooled.')
+        cols = ['orth_estimate','orth_hdi_lower','orth_hdi_upper','st_estimate','st_hdi_lower','st_hdi_upper','width_ratio']
+        for c in cols:
+            df[c] = pd.to_numeric(df[c], errors='coerce')
+        df = df[np.isfinite(df[cols]).all(axis=1)].copy()
+        if df.empty:
+            raise ValueError('No complete pairs of intervals in this selection.')
+        units = str(df['units'].iloc[0]) if 'units' in df else 'Estimate'
+        if kind == 'model_comparison':
+            df['rank'] = df[['orth_estimate','st_estimate']].abs().max(axis=1)
+            df = df.sort_values('rank', ascending=False).head(limit).iloc[::-1]
+            fig, ax = plt.subplots(figsize=(8.4, max(3, len(df)*.34+1.5)))
+            for i, (_, r) in enumerate(df.iterrows()):
+                for offset, prefix, color, marker in [(.17, 'orth', MID_GREY, 's'), (-.17, 'st', TEAL, 'o')]:
+                    ax.plot([r[prefix+'_hdi_lower'], r[prefix+'_hdi_upper']], [i+offset, i+offset], color=color, lw=1.8)
+                    excludes = r[prefix+'_hdi_lower'] > 0 or r[prefix+'_hdi_upper'] < 0
+                    ax.scatter([r[prefix+'_estimate']], [i+offset], s=26, marker=marker, edgecolor=color,
+                               facecolor=color if excludes else 'white', zorder=3)
+            labels = [str(r.get('label') or r['feature']) + (' · '+str(r['cell_type']) if r.get('cell_type') else '') for r in df.to_dict('records')]
+            ax.set_yticks(range(len(df)), labels=labels, fontsize=8)
+            ax.axvline(0, color='#6F7378', lw=.8, ls='--'); ax.set_xlabel(units)
+            ax.legend(handles=[Line2D([0],[0],color=TEAL,marker='o',lw=1.8,label='Student-t intercept model'),
+                               Line2D([0],[0],color=MID_GREY,marker='s',lw=1.8,label='Orthogonal patient-effect model')],
+                      loc='lower right', fontsize=8, frameon=False)
+            ax.set_title(title, loc='left', fontsize=11); ax.grid(axis='x', alpha=.5); fig.tight_layout()
+            note = (f'{len(df)} rows with the largest absolute posterior mean under either model. Bars: pointwise 95% HDIs; '
+                    'filled markers: HDI excludes zero. In simulation the Student-t intercept intervals kept near-nominal coverage '
+                    'and the orthogonal intervals undercovered. No multiplicity correction.')
+        else:
+            ratio = df['width_ratio']
+            fig, ax = plt.subplots(figsize=(7, 4.5))
+            ax.hist(ratio, bins=min(30, max(5, int(np.sqrt(len(ratio))))), color=TEAL)
+            ax.axvline(1, color='#6F7378', lw=1, ls='--')
+            ax.set_xlabel('95% HDI width, Student-t intercept / orthogonal'); ax.set_ylabel('Estimates')
+            ax.set_title(title, loc='left', fontsize=11); fig.tight_layout()
+            note = (f'{len(ratio)} paired estimates; median width ratio {ratio.median():.2f}. '
+                    'Values above 1 (dashed line) mean the Student-t intercept interval is wider.')
     elif kind == 'signatures':
         if df.cell_type.nunique()!=1:
             raise ValueError('Select one cell type to compare its signatures.')

@@ -1,10 +1,29 @@
 # Manuscript figure numbering
 
-Current numbering follows the manuscript and presentation decks supplied on 3 November 2026: Figures 1–7 and supplementary Figures S1–S24. The supplementary file is named `Supplementary_Figures_S1-S19.pptx`, but its contents run through S24.
+Current numbering follows the r10 figure set and manuscript r15 (22 November 2026): Figures 1–7 and supplementary Figures S1–S26. The cellular RNA results use the Student-t patient × cell-type intercept model (Figures 2–4 and S3–S11); the orthogonal patient-effect model appears only as the comparison in the simulation and in the Atlas comparison view.
 
-The [machine-readable figure reference](../web/manuscript-figures.json) records the reference-file SHA-256 hashes, current collection titles and panel mapping. The [data manifest](../web/manuscript-manifest.json) retains the original numerical release and source fingerprints.
+The [machine-readable figure reference](../web/manuscript-figures.json) records the reference-file SHA-256 hashes, current collection titles and panel mapping. The [data manifest](../web/manuscript-manifest.json) retains the original numerical release and source fingerprints. [align_manuscript_figure_numbers_r10.sql](../database/align_manuscript_figure_numbers_r10.sql) applies the new labels in Supabase; it is metadata only.
 
-## Changes from the archived figure package
+## Changes from the 3 November numbering
+
+| Content | 3 November numbering | r10 numbering |
+| --- | --- | --- |
+| Cellular, RNA–protein and PTM workflows | S17a–c | 1a–c |
+| Signature heatmap | 3a (orthogonal patient-effect model) | 3a (Student-t intercept model; new values) |
+| Named continuous RNA examples | 3b–e | removed; 3b cell-type means, 3c TAM signatures |
+| RNA–protein displayed gene sets and labels | 5e | 5d |
+| Conditional phospho candidates | 6c | 6d |
+| Conditional glyco candidates | 6d | 6e |
+| PTM landscape and candidate diagnostic coverage | S14 | S20 |
+| STAT3 and ASAH1 feature estimates | S15a,b | S25a,b |
+| STAT3/ASAH1 sensitivities and bootstrap | S16a–c | S26a–c |
+| PTM calibration coverage, bias, RMSE | S18, S19, S20 | S16, S17, S18 |
+| SBC ranks and simulation completion | S21a,b | S19a,b |
+| PTM sensitivity overview, classifications and comparisons | S22–S24 | S22–S24 (unchanged) |
+
+The collection `manuscript/rna_heatmap_values` holds the orthogonal patient-effect values from the earlier Figure 3a. It is relabelled rather than removed, because Figure 3 now uses Student-t intercept estimates, which are in the RNA effects collections.
+
+## Earlier changes from the archived figure package (3 November)
 
 | Content | Archived numbering | Current numbering |
 | --- | --- | --- |
@@ -28,7 +47,7 @@ The [machine-readable figure reference](../web/manuscript-figures.json) records 
 | First four PTM sensitivity comparisons | S25c–f | S23a–d |
 | Last four PTM sensitivity comparisons | S25g–j | S24a–d |
 
-## Current panel references
+## Panel references at 3 November (superseded by the table above)
 
 | Figure/panel | Content |
 | --- | --- |
