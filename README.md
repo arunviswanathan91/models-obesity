@@ -57,3 +57,13 @@ Intervals and support indicators must be interpreted using each analysis's state
 
 Run the renderer checks with `python -m unittest discover -s tests -p 'test_manuscript_renderer.py'` from the repository root.
 
+## Analysis code used in the paper
+
+- `analysis/rna_student_t`: primary cellular RNA model (Student-t patient × cell-type intercept) and its sensitivity analyses
+- `analysis/rna_simulation_student_t`: simulation comparing the Student-t intercept and orthogonal patient-effect models
+- `analysis/figures_r10`: figure code
+- `analysis/rna`: orthogonal patient-effect model (comparison)
+- `analysis/paired`, `analysis/ptm_extension`: RNA–protein and protein–PTM models
+- `analysis/deconvolution`, `analysis/signatures`: upstream inputs
+
+`analysis/rna_simulation` holds the earlier simulation study and is not the simulation reported in the paper.
