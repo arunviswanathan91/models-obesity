@@ -99,7 +99,7 @@
 .xp-cmp-panel svg{width:100%;height:auto;display:block}
 .xp-cmp-top .xp-bubble{width:min(300px,100%)}
 @media(max-width:860px){.xp-cmp-grid{grid-template-columns:1fr}}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .xp-cmp-bar,:root:not([data-theme="light"]) .xp-cmp-panel{background:#161E22}}
+
 .xp-cmp-panel .xp-live{min-height:3.6em;display:flex;align-items:center}
 
 /* loading popup over a figure window */
@@ -111,7 +111,7 @@
 .xp-spinner{width:26px;height:26px;border:3px solid var(--line,#DCDDE0);border-top-color:var(--teal,#0E7C7B);border-radius:50%;animation:xp-spin .8s linear infinite}
 @keyframes xp-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.xp-spinner{animation:none;border-top-color:var(--teal,#0E7C7B);border-right-color:var(--teal,#0E7C7B)}}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .xp-loading{background:rgba(16,22,26,.6)}:root:not([data-theme="light"]) .xp-loading-card{background:#161E22}}
+
 
 /* Signature curation walkthrough (in-page replay) */
 .sw-back{margin:0 0 .75rem}.sw-banner{border-left:3px solid var(--magenta,#D81B60);background:#f7f8f8;padding:.55rem .8rem;margin:.5rem 0;font-size:.9rem}
@@ -123,3 +123,5 @@
 .sw-nav{display:flex;gap:.5rem;align-items:center}.sw-count{margin:0 0 0 auto}
 #results.walkthrough-open>:not(#signature-detail):not(.result-heading){display:none!important}
 #results.walkthrough-open .result-heading button{display:none}
+
+.xp-live{display:block}
